@@ -1,0 +1,32 @@
+Create a comprehensive Python coding interview preparation guide in markdown format with the following structure:
+
+1. Introduction
+   - General approach to coding interviews
+   - Problem-solving framework
+
+2. Common Python Libraries and Built-in Functions for Coding Interviews
+   - Overview of useful standard library tools
+
+For each of the following algorithm topics:
+- Arrays and Hashing
+- Two Pointers and Sliding Window
+- Stack and Queue
+- Binary Search
+- Linked Lists
+- Trees (include a comparison matrix of tree types)
+- Heaps/Priority Queues
+- Dynamic Programming (cover both memoization and bottom-up approaches)
+- Backtracking
+- Greedy Algorithms
+- Graphs (include a comparison matrix of graph types/algorithms)
+- Intervals
+- Math and Geometry
+- Trie Data Structure
+
+Include exactly two sections for each topic:
+1. "Theory" - covering implementation details, common patterns, time/space complexity analysis, and specific guidance on how to identify when this approach should be used for a problem
+2. "Example Problems" - provide 3 problems (one easy, one medium, one hard) with pythonic solutions (including type hints and standard library features where appropriate). For each solution, explain the approach before providing the code, without using in-line comments.
+
+Additionally, include a section on SQL for Analytics with 6 medium/advanced example problems and their solutions (no theory needed).
+
+Ensure all code is properly formatted and optimized with appropriate use of Python's standard library.
