@@ -1020,15 +1020,40 @@ Space Complexity: O(n) - For storing all elements across both stacks
 
 Binary search is a divide-and-conquer algorithm that efficiently finds an element in a sorted array by repeatedly dividing the search space in half.
 
-#### Key Principles:
+**Key Principles:**
+1. The array must be sorted
+2. In each step, compare the target with the middle element
+3. If target equals middle element, return the index
+4. If target is less than middle element, search the left half
+5. If target is greater than middle element, search the right half
 
-The array must be sorted
-In each step, compare the target with the middle element
-If target equals middle element, return the index
-If target is less than middle element, search the left half
-If target is greater than middle element, search the right half
+**Visual Explanation:**
+```
+Sorted Array: [1, 3, 5, 7, 9, 11, 13, 15, 17, 19]
+Target: 9
 
-#### Basic Implementation:
+Iteration 1:
+ [1, 3, 5, 7, 9, 11, 13, 15, 17, 19]
+             ↑
+           mid = 9
+ nums[mid] = 9 == 9, found at index 4!
+
+Another example with target = 13:
+
+Iteration 1:
+ [1, 3, 5, 7, 9, 11, 13, 15, 17, 19]
+             ↑
+           mid = 9
+ nums[mid] = 9 < 13, search right half
+
+Iteration 2:
+                 [11, 13, 15, 17, 19]
+                      ↑
+                    mid = 13
+ nums[mid] = 13 == 13, found at index 6!
+```
+
+**Basic Implementation:**
 
 ```python
 def binary_search(nums: list[int], target: int) -> int:
@@ -1047,8 +1072,9 @@ def binary_search(nums: list[int], target: int) -> int:
     return -1  # Target not found
 ```
 
-#### Common Variation - Finding the leftmost occurrence:
+**Common Variations:**
 
+1. **Finding the leftmost occurrence:**
 ```python
 def binary_search_leftmost(nums: list[int], target: int) -> int:
     left, right = 0, len(nums) - 1
@@ -1067,8 +1093,76 @@ def binary_search_leftmost(nums: list[int], target: int) -> int:
     
     return result
 ```
+
+2. **Finding the rightmost occurrence:**
+```python
+def binary_search_rightmost(nums: list[int], target: int) -> int:
+    left, right = 0, len(nums) - 1
+    result = -1
+    
+    while left <= right:
+        mid = (left + right) // 2
+        
+        if nums[mid] == target:
+            result = mid  # Found a match, but continue searching right
+            left = mid + 1
+        elif nums[mid] < target:
+            left = mid + 1
+        else:
+            right = mid - 1
+    
+    return result
+```
+
 3. **Binary search on answer space:**
 Sometimes binary search can be applied to problems that don't involve arrays but have a range of possible answers.
+
+**Visual Representation of Template:**
+```
+Binary Search Template:
+
+          ┌───────────────────┐
+          │ Initialize        │
+          │ left, right bounds│
+          └─────────┬─────────┘
+                    │
+                    ▼
+          ┌───────────────────┐
+          │ While left ≤ right│◀───────────┐
+          └─────────┬─────────┘            │
+                    │                       │
+                    ▼                       │
+          ┌───────────────────┐            │
+          │Calculate mid point│            │
+          └─────────┬─────────┘            │
+                    │                       │
+                    ▼                       │
+         ┌────────────────────┐            │
+         │Compare target with │            │
+         │   nums[mid]        │            │
+         └─────────┬─────────┬┘            │
+                   │         │             │
+         ┌─────────▼──┐ ┌────▼────────┐    │
+         │   Equal?   │ │ Not Equal?  │    │
+         │  Return mid│ │             │    │
+         └────────────┘ └────┬────────┘    │
+                             │             │
+            ┌────────────────┴────────┐    │
+            │                         │    │
+ ┌──────────▼───────────┐  ┌──────────▼────────┐
+ │ target < nums[mid]?  │  │ target > nums[mid]?│
+ │ right = mid - 1      │  │ left = mid + 1     │
+ └──────────┬───────────┘  └──────────┬─────────┘
+            │                         │
+            └─────────────┬───────────┘
+                          │
+                          ▼
+                  ┌───────────────────┐
+                  │ If loop ends with │
+                  │ no return: Not    │
+                  │ found, return -1  │
+                  └───────────────────┘
+```
 
 #### When to Use Binary Search
 
@@ -1108,33 +1202,24 @@ def search(nums: list[int], target: int) -> int:
             right = mid - 1
     
     return -1
-Visual Example:
+```
 
-nums = [-1, 0, 3, 5, 9, 12], target = 9
-
-Iteration 1:
- left = 0, right = 5, mid = 2
- nums[mid] = 3 < 9, search right half
- left = 3, right = 5
-
-Iteration 2:
- left = 3, right = 5, mid = 4
- nums[mid] = 9 == 9, found at index 4!
 Time Complexity: O(log n) - The search space is halved in each step
 Space Complexity: O(1) - We only use a constant amount of extra space
 
-Medium: Search in Rotated Sorted Array
-Problem: Given a rotated sorted array nums and an integer target, write a function that returns the index of target if it exists in the array, or -1 if it does not exist. The array was originally sorted in ascending order, then rotated at an unknown pivot point.
+#### Medium: Search in Rotated Sorted Array
 
-Examples:
+**Problem**: Given a rotated sorted array `nums` and an integer `target`, write a function that returns the index of `target` if it exists in the array, or -1 if it does not exist. The array was originally sorted in ascending order, then rotated at an unknown pivot point.
 
-search_rotated([4, 5, 6, 7, 0, 1, 2], 0) should return 4
-search_rotated([4, 5, 6, 7, 0, 1, 2], 3) should return -1
-search_rotated([1], 0) should return -1
-search_rotated([1, 3], 3) should return 1
-Approach: We need to modify the binary search to handle the rotation. First, find which half of the array is sorted, then check if the target lies in that sorted half.
+**Examples**:
+- `search_rotated([4, 5, 6, 7, 0, 1, 2], 0)` should return `4`
+- `search_rotated([4, 5, 6, 7, 0, 1, 2], 3)` should return `-1`
+- `search_rotated([1], 0)` should return `-1`
+- `search_rotated([1, 3], 3)` should return `1`
 
-python
+**Approach**: We need to modify the binary search to handle the rotation. First, find which half of the array is sorted, then check if the target lies in that sorted half.
+
+```python
 def search_rotated(nums: list[int], target: int) -> int:
     left, right = 0, len(nums) - 1
     
@@ -1160,42 +1245,24 @@ def search_rotated(nums: list[int], target: int) -> int:
                 right = mid - 1  # Target is in the left half
     
     return -1
-Visual Example:
+```
 
-nums = [4, 5, 6, 7, 0, 1, 2], target = 0
-
-Iteration 1:
- left = 0, right = 6, mid = 3
- nums[mid] = 7 != 0
- nums[left] = 4 <= nums[mid] = 7, left half is sorted
- target = 0 < nums[left] = 4, target not in left half
- left = mid + 1 = 4, right = 6
-
-Iteration 2:
- left = 4, right = 6, mid = 5
- nums[mid] = 1 != 0
- nums[left] = 0 <= nums[mid] = 1, left half is sorted
- nums[left] = 0 <= target = 0 < nums[mid] = 1, target in left half
- left = 4, right = mid - 1 = 4
-
-Iteration 3:
- left = 4, right = 4, mid = 4
- nums[mid] = 0 == 0, found at index 4!
 Time Complexity: O(log n) - We're still performing binary search
 Space Complexity: O(1) - We only use a constant amount of extra space
 
-Medium: Find First and Last Position of Element in Sorted Array
-Problem: Given a sorted array of integers nums and an integer target, write a function that returns the starting and ending position of target in nums. If target is not found in the array, return [-1, -1].
+#### Medium: Find First and Last Position of Element in Sorted Array
 
-Examples:
+**Problem**: Given a sorted array of integers `nums` and an integer `target`, write a function that returns the starting and ending position of `target` in `nums`. If `target` is not found in the array, return `[-1, -1]`.
 
-search_range([5, 7, 7, 8, 8, 10], 8) should return [3, 4]
-search_range([5, 7, 7, 8, 8, 10], 6) should return [-1, -1]
-search_range([], 0) should return [-1, -1]
-search_range([1], 1) should return [0, 0]
-Approach: Use modified binary search twice - once to find the leftmost occurrence and once to find the rightmost occurrence.
+**Examples**:
+- `search_range([5, 7, 7, 8, 8, 10], 8)` should return `[3, 4]`
+- `search_range([5, 7, 7, 8, 8, 10], 6)` should return `[-1, -1]`
+- `search_range([], 0)` should return `[-1, -1]`
+- `search_range([1], 1)` should return `[0, 0]`
 
-python
+**Approach**: Use modified binary search twice - once to find the leftmost occurrence and once to find the rightmost occurrence.
+
+```python
 def search_range(nums: list[int], target: int) -> list[int]:
     # Helper function to find leftmost occurrence
     def find_leftmost():
@@ -1239,68 +1306,48 @@ def search_range(nums: list[int], target: int) -> list[int]:
     
     right_idx = find_rightmost()
     return [left_idx, right_idx]
-Visual Example:
+```
 
-nums = [5, 7, 7, 8, 8, 10], target = 8
-
-Find leftmost:
-Iteration 1:
- left = 0, right = 5, mid = 2
- nums[mid] = 7 < 8, search right half
- left = 3, right = 5
-
-Iteration 2:
- left = 3, right = 5, mid = 4
- nums[mid] = 8 == 8, result = 4, continue searching left
- left = 3, right = 3
-
-Iteration 3:
- left = 3, right = 3, mid = 3
- nums[mid] = 8 == 8, result = 3, continue searching left
- left = 3, right = 2 (loop ends)
- leftmost = 3
-
-Find rightmost:
-Iteration 1:
- left = 0, right = 5, mid = 2
- nums[mid] = 7 < 8, search right half
- left = 3, right = 5
-
-Iteration 2:
- left = 3, right = 5, mid = 4
- nums[mid] = 8 == 8, result = 4, continue searching right
- left = 5, right = 5
-
-Iteration 3:
- left = 5, right = 5, mid = 5
- nums[mid] = 10 > 8, search left half
- left = 5, right = 4 (loop ends)
- rightmost = 4
-
-Result: [3, 4]
 Time Complexity: O(log n) - We perform binary search twice
 Space Complexity: O(1) - We only use a constant amount of extra space
 
+#### Medium: Find Minimum in Rotated Sorted Array
 
-2. **Finding the rightmost occurrence:**
+**Problem**: Suppose an array of length `n` sorted in ascending order is rotated between 1 and n times. Given the sorted rotated array `nums`, write a function that returns the minimum element of this array.
+
+**Examples**:
+- `find_min([3, 4, 5, 1, 2])` should return `1`
+- `find_min([4, 5, 6, 7, 0, 1, 2])` should return `0`
+- `find_min([11, 13, 15, 17])` should return `11`
+- `find_min([2, 1])` should return `1`
+
+**Approach**: Use binary search to find the "inflection point" where the array wraps around.
+
 ```python
-def binary_search_rightmost(nums: list[int], target: int) -> int:
+def find_min(nums: list[int]) -> int:
     left, right = 0, len(nums) - 1
-    result = -1
     
-    while left <= right:
-        mid = (left + right) // 2
+    # If the array is not rotated
+    if nums[left] < nums[right]:
+        return nums[left]
+    
+    while left < right:
+        mid = left + (right - left) // 2
         
-        if nums[mid] == target:
-            result = mid  # Found a match, but continue searching right
+        # If mid element is greater than right element, 
+        # minimum is in the right half
+        if nums[mid] > nums[right]:
             left = mid + 1
-        elif nums[mid] < target:
-            left = mid + 1
+        # If mid element is less than or equal to right element,
+        # minimum is in the left half or at mid
         else:
-            right = mid - 1
+            right = mid
     
-    return result
+    return nums[left]
 ```
+
+Time Complexity: O(log n) - We're performing binary search
+Space Complexity: O(1) - We only use a constant amount of extra space
 
 ## Linked Lists
 
@@ -1401,34 +1448,6 @@ def reverse_list(head: ListNode) -> ListNode:
     return prev
 ```
 
-**Visual Example:**
-```
-Original: 1->2->3->4->5
-
-Iteration 1:
-  current = 1, next_temp = 2
-  1->None, prev = 1, current = 2
-  
-Iteration 2:
-  current = 2, next_temp = 3
-  2->1->None, prev = 2, current = 3
-  
-Iteration 3:
-  current = 3, next_temp = 4
-  3->2->1->None, prev = 3, current = 4
-  
-Iteration 4:
-  current = 4, next_temp = 5
-  4->3->2->1->None, prev = 4, current = 5
-  
-Iteration 5:
-  current = 5, next_temp = None
-  5->4->3->2->1->None, prev = 5, current = None
-  
-Loop ends, return prev = 5
-Result: 5->4->3->2->1
-```
-
 Time Complexity: O(n) - We visit each node once
 Space Complexity: O(1) - We only use a constant amount of extra space
 
@@ -1468,30 +1487,6 @@ def remove_nth_from_end(head: ListNode, n: int) -> ListNode:
     return dummy.next
 ```
 
-**Visual Example:**
-```
-head = 1->2->3->4->5, n = 2
-
-Initialize:
-  dummy->1->2->3->4->5
-  first = dummy, second = dummy
-
-Advance first n+1 steps:
-  dummy->1->2->3->4->5
-         f        s
-
-Move both pointers until first is null:
-  dummy->1->2->3->4->5
-                  f
-               s
-
-Remove node:
-  second.next = second.next.next
-  dummy->1->2->3->5
-  
-Return dummy.next = 1->2->3->5
-```
-
 Time Complexity: O(n) - We traverse the list once
 Space Complexity: O(1) - We only use a constant amount of extra space
 
@@ -1522,25 +1517,6 @@ def has_cycle(head: ListNode) -> bool:
             return True
     
     return False                 # No cycle
-```
-
-**Visual Example:**
-```
-head = 1->2->3->4->2 (4 points back to 2)
-
-Iteration 1:
-  slow = 1, fast = 1
-  slow = 2, fast = 3
-  slow != fast, continue
-
-Iteration 2:
-  slow = 3, fast = 2 (after 4)
-  slow != fast, continue
-
-Iteration 3:
-  slow = 4, fast = 4
-  slow == fast, cycle detected!
-  Return True
 ```
 
 Time Complexity: O(n) - In the worst case, we traverse the list once
@@ -1591,26 +1567,6 @@ def get_intersection_node(headA: ListNode, headB: ListNode) -> ListNode:
         currB = currB.next
     
     return None  # No intersection
-```
-
-**Visual Example:**
-```
-headA = 1->2->3->4->5
-headB = 6->3->4->5
-(Lists intersect at node with value 3)
-
-lenA = 5, lenB = 4
-Align starting positions:
-  currA = 2, currB = 6 (skip the first node of A)
-
-Iteration 1:
-  currA = 2, currB = 6
-  currA != currB, continue
-  currA = 3, currB = 3
-
-Iteration 2:
-  currA = 3, currB = 3
-  currA == currB, return node with value 3
 ```
 
 Time Complexity: O(m + n) - Where m and n are the lengths of the two lists
@@ -1791,30 +1747,6 @@ def max_depth(root: TreeNode) -> int:
     return max(left_depth, right_depth) + 1
 ```
 
-**Visual Example:**
-```
-max_depth(3):
-  left_depth = max_depth(9):
-    left_depth = max_depth(null) = 0
-    right_depth = max_depth(null) = 0
-    return max(0, 0) + 1 = 1
-    
-  right_depth = max_depth(20):
-    left_depth = max_depth(15):
-      left_depth = max_depth(null) = 0
-      right_depth = max_depth(null) = 0
-      return max(0, 0) + 1 = 1
-    
-    right_depth = max_depth(7):
-      left_depth = max_depth(null) = 0
-      right_depth = max_depth(null) = 0
-      return max(0, 0) + 1 = 1
-    
-    return max(1, 1) + 1 = 2
-    
-  return max(1, 2) + 1 = 3
-```
-
 Time Complexity: O(n) - We visit each node once
 Space Complexity: O(h) - Where h is the height of the tree (for the recursion stack)
 
@@ -1860,26 +1792,6 @@ def is_valid_bst(root: TreeNode) -> bool:
     
     return validate(root)
 ```
-
-**Visual Example:**
-```
-is_valid_bst(5):
-  validate(5, -inf, inf):
-    node.val = 5, in range? Yes
-    
-    validate(1, -inf, 5):
-      node.val = 1, in range? Yes
-      validate(null, -inf, 1) = True
-      validate(null, 1, 5) = True
-      return True
-      
-    validate(4, 5, inf):
-      node.val = 4, in range? No (4 is not > 5)
-      return False
-      
-    return False
-```
-
 Time Complexity: O(n) - We visit each node once
 Space Complexity: O(h) - Where h is the height of the tree
 
@@ -2088,30 +2000,6 @@ class KthLargest:
         return self.heap[0]
 ```
 
-**Visual Example:**
-```
-KthLargest(3, [4, 5, 8, 2]):
-  Initialize: k = 3, heap = []
-  
-  Add 4: heap = [4]
-  Add 5: heap = [4, 5]
-  Add 8: heap = [4, 5, 8]
-  Add 2: heap = [2, 4, 5, 8]
-          Remove smallest: heap = [4, 5, 8]
-  
-  kthLargest.add(3):
-    Add 3: heap = [3, 4, 5, 8]
-    Remove smallest: heap = [4, 5, 8]
-    Return 4
-    
-  kthLargest.add(5):
-    Add 5: heap = [4, 5, 5, 8]
-    Remove smallest: heap = [5, 5, 8]
-    Return 5
-    
-  ... and so on
-```
-
 Time Complexity:
 - Initialization: O(n log k) - For adding n elements
 - Add operation: O(log k) - Heap operations with k elements
@@ -2152,27 +2040,6 @@ def top_k_frequent(nums: list[int], k: int) -> list[int]:
     
     return result
 ```
-
-**Visual Example:**
-```
-top_k_frequent([1, 1, 1, 2, 2, 3], 2):
-  counter = {1: 3, 2: 2, 3: 1}
-  
-  Process num=1, freq=3:
-    Push (3, 1) to heap: heap = [(3, 1)]
-    
-  Process num=2, freq=2:
-    Push (2, 2) to heap: heap = [(2, 2), (3, 1)]
-    
-  Process num=3, freq=1:
-    Push (1, 3) to heap: heap = [(1, 3), (2, 2), (3, 1)]
-    Heap size > k, remove (1, 3): heap = [(2, 2), (3, 1)]
-    
-  Result = [2, 1]
-```
-
-Time Complexity: O(n log k) - Where n is the length of the input array
-Space Complexity: O(n) - For the counter and heap
 
 #### Medium: Merge K Sorted Lists
 
@@ -2907,31 +2774,266 @@ def pacific_atlantic(heights: list[list[int]]) -> list[list[int]]:
     return [[i, j] for i, j in pacific_reachable.intersection(atlantic_reachable)]
 ```
 
-**Visual Example:**
-```
-heights = [
-  [1,2,2,3,5],
-  [3,2,3,4,4],
-  [2,4,5,3,1],
-  [6,7,1,4,5],
-  [5,1,1,2,4]
-]
-
-1. Pacific DFS:
-   Start from left edge and top edge
-   Mark all cells that water can flow from to the Pacific
-
-2. Atlantic DFS:
-   Start from right edge and bottom edge
-   Mark all cells that water can flow from to the Atlantic
-
-3. Intersection:
-   Find cells that can reach both oceans
-   Result: [[0,4],[1,3],[1,4],[2,2],[3,0],[3,1],[4,0]]
-```
-
 Time Complexity: O(m*n) - We potentially visit each cell twice (once for each ocean)
 Space Complexity: O(m*n) - For the sets storing reachable cells
+
+## Backtracking
+
+### Theory
+
+Backtracking is an algorithmic technique for solving problems recursively by trying to build a solution incrementally, and abandoning a solution ("backtracking") as soon as it determines that the current path cannot lead to a valid solution.
+
+#### Key Principles:
+
+1. **Recursive Exploration**: Try different choices recursively
+2. **Constraint Checking**: Check if the current state violates any constraints
+3. **Pruning**: Abandon paths that cannot lead to valid solutions
+4. **State Management**: Save and restore state when backtracking
+
+**Visual Representation of Backtracking:**
+```
+                      ┌───┐
+                      │ S │ (Start state)
+                      └─┬─┘
+         ┌─────────────┼─────────────┐
+         │             │             │
+      ┌──┴──┐       ┌──┴──┐       ┌──┴──┐
+      │ S1  │       │ S2  │       │ S3  │ (First choices)
+      └──┬──┘       └──┬──┘       └──┬──┘
+    ┌────┼────┐        │         ✗ Invalid path
+    │    │    │        │            (prune)
+ ┌──┴──┐ │ ┌──┴──┐  ┌──┴──┐
+ │S1,1 │ │ │S1,2 │  │S2,1 │ (Second choices)
+ └─────┘ │ └─────┘  └─────┘
+      ✗ Invalid    ✓ Solution
+         path
+```
+
+#### Common Backtracking Template:
+
+```python
+def backtrack(state, choices, result):
+    # Check if solution is complete
+    if is_solution(state):
+        result.append(state.copy())  # Add a copy of the current solution
+        return
+    
+    # Try each possible choice
+    for choice in choices:
+        # Check if valid choice
+        if is_valid(state, choice):
+            # Make the choice
+            state.add(choice)
+            
+            # Recurse with updated state
+            backtrack(state, choices, result)
+            
+            # Undo the choice (backtrack)
+            state.remove(choice)
+```
+
+#### Common Backtracking Problems:
+
+1. **Combinatorial Problems**: Permutations, combinations, subsets
+2. **Constraint Satisfaction**: N-Queens, Sudoku
+3. **Path Finding**: Maze solving, word search
+4. **Decision Problems**: Satisfiability, coloring
+
+#### When to Use Backtracking
+
+Use backtracking when:
+- You need to find all (or some) solutions to a problem
+- The problem involves making choices from a set of options
+- There are constraints that eliminate invalid solutions
+- You need to explore a search space systematically
+
+### Example Problems
+
+#### Easy: Letter Combinations of a Phone Number
+
+**Problem**: Given a string containing digits from 2-9, write a function that returns all possible letter combinations that the number could represent (like on a telephone keypad).
+
+**Mapping**:
+```
+2: "abc"
+3: "def"
+4: "ghi"
+5: "jkl"
+6: "mno"
+7: "pqrs"
+8: "tuv"
+9: "wxyz"
+```
+
+**Examples**:
+- `letter_combinations("23")` should return `["ad", "ae", "af", "bd", "be", "bf", "cd", "ce", "cf"]`
+- `letter_combinations("")` should return `[]`
+- `letter_combinations("2")` should return `["a", "b", "c"]`
+
+**Approach**: Use backtracking to generate all combinations by making choices for each digit.
+
+```python
+def letter_combinations(digits: str) -> list[str]:
+    if not digits:
+        return []
+    
+    # Mapping of digits to letters
+    phone_map = {
+        '2': 'abc', '3': 'def', '4': 'ghi', '5': 'jkl',
+        '6': 'mno', '7': 'pqrs', '8': 'tuv', '9': 'wxyz'
+    }
+    
+    result = []
+    
+    def backtrack(index: int, current: str) -> None:
+        # If we've processed all digits, add the combination
+        if index == len(digits):
+            result.append(current)
+            return
+        
+        # Get the letters for the current digit
+        letters = phone_map[digits[index]]
+        
+        # Try each letter
+        for letter in letters:
+            # Add the letter and recurse
+            backtrack(index + 1, current + letter)
+    
+    backtrack(0, "")
+    return result
+```
+
+Time Complexity: O(4^n) where n is the number of digits (since a digit can map to at most 4 letters)
+Space Complexity: O(n) for the recursion stack
+
+#### Medium: Permutations
+
+**Problem**: Given an array `nums` of distinct integers, write a function that returns all possible permutations. The solution can be in any order.
+
+**Examples**:
+- `permute([1, 2, 3])` should return `[[1,2,3], [1,3,2], [2,1,3], [2,3,1], [3,1,2], [3,2,1]]`
+- `permute([0, 1])` should return `[[0,1], [1,0]]`
+- `permute([1])` should return `[[1]]`
+
+**Approach**: Use backtracking to generate all permutations by choosing each element as the next in the sequence.
+
+```python
+def permute(nums: list[int]) -> list[list[int]]:
+    result = []
+    n = len(nums)
+    
+    def backtrack(current: list[int], remaining: set[int]) -> None:
+        # If permutation is complete
+        if len(current) == n:
+            result.append(current.copy())
+            return
+        
+        # Try each remaining number
+        for num in list(remaining):
+            # Add the number to current permutation
+            current.append(num)
+            remaining.remove(num)
+            
+            # Recurse
+            backtrack(current, remaining)
+            
+            # Backtrack (undo the choice)
+            current.pop()
+            remaining.add(num)
+    
+    backtrack([], set(nums))
+    return result
+```
+
+Time Complexity: O(n!) - We generate all permutations
+Space Complexity: O(n) - For the recursion stack and to store each permutation
+
+#### Medium: Subsets
+
+**Problem**: Given an integer array `nums` of unique elements, write a function that returns all possible subsets (the power set). The solution set must not contain duplicate subsets.
+
+**Examples**:
+- `subsets([1, 2, 3])` should return `[[], [1], [2], [1, 2], [3], [1, 3], [2, 3], [1, 2, 3]]`
+- `subsets([0])` should return `[[], [0]]`
+
+**Approach**: Use backtracking to generate all subsets by deciding whether to include each element or not.
+
+```python
+def subsets(nums: list[int]) -> list[list[int]]:
+    result = []
+    n = len(nums)
+    
+    def backtrack(start: int, current: list[int]) -> None:
+        # Add the current subset
+        result.append(current.copy())
+        
+        # Try including each remaining element
+        for i in range(start, n):
+            # Include nums[i]
+            current.append(nums[i])
+            
+            # Recursively generate subsets with nums[i] included
+            backtrack(i + 1, current)
+            
+            # Backtrack (remove nums[i])
+            current.pop()
+    
+    backtrack(0, [])
+    return result
+```
+
+**Visual Example:**
+```
+subsets([1, 2, 3]):
+  
+  backtrack(0, []):
+    Add [] to result
+    
+    Iteration 1: i = 0, nums[0] = 1
+      current = [1]
+      
+      backtrack(1, [1]):
+        Add [1] to result
+        
+        Iteration 1.1: i = 1, nums[1] = 2
+          current = [1, 2]
+          
+          backtrack(2, [1, 2]):
+            Add [1, 2] to result
+            
+            Iteration 1.1.1: i = 2, nums[2] = 3
+              current = [1, 2, 3]
+              
+              backtrack(3, [1, 2, 3]):
+                Add [1, 2, 3] to result
+                No more elements
+              
+              current = [1, 2]
+            
+            current = [1]
+          
+        Iteration 1.2: i = 2, nums[2] = 3
+          current = [1, 3]
+          
+          backtrack(3, [1, 3]):
+            Add [1, 3] to result
+            No more elements
+          
+          current = [1]
+        
+        current = []
+      
+    Iteration 2: i = 1, nums[1] = 2
+      (similar to above, generating [2] and [2, 3])
+    
+    Iteration 3: i = 2, nums[2] = 3
+      (generating [3])
+    
+  Result: [[], [1], [1, 2], [1, 2, 3], [1, 3], [2], [2, 3], [3]]
+```
+
+Time Complexity: O(2^n * n) - We generate all 2^n subsets, and each might take O(n) time to copy
+Space Complexity: O(n) - For the recursion stack (excluding the output)
 
 ## Greedy Algorithms
 
@@ -3018,49 +3120,6 @@ def max_subarray(nums: list[int]) -> int:
     return max_sum
 ```
 
-**Visual Example:**
-```
-nums = [-2, 1, -3, 4, -1, 2, 1, -5, 4]
-
-Iteration 1: num = -2
-  current_sum = max(-2, 0 + (-2)) = -2
-  max_sum = max(-inf, -2) = -2
-
-Iteration 2: num = 1
-  current_sum = max(1, -2 + 1) = 1
-  max_sum = max(-2, 1) = 1
-
-Iteration 3: num = -3
-  current_sum = max(-3, 1 + (-3)) = -2
-  max_sum = max(1, -2) = 1
-
-Iteration 4: num = 4
-  current_sum = max(4, -2 + 4) = 4
-  max_sum = max(1, 4) = 4
-
-Iteration 5: num = -1
-  current_sum = max(-1, 4 + (-1)) = 3
-  max_sum = max(4, 3) = 4
-
-Iteration 6: num = 2
-  current_sum = max(2, 3 + 2) = 5
-  max_sum = max(4, 5) = 5
-
-Iteration 7: num = 1
-  current_sum = max(1, 5 + 1) = 6
-  max_sum = max(5, 6) = 6
-
-Iteration 8: num = -5
-  current_sum = max(-5, 6 + (-5)) = 1
-  max_sum = max(6, 1) = 6
-
-Iteration 9: num = 4
-  current_sum = max(4, 1 + 4) = 5
-  max_sum = max(6, 5) = 6
-
-Result: 6
-```
-
 Time Complexity: O(n) - We traverse the array once
 Space Complexity: O(1) - We only use a constant amount of extra space
 
@@ -3095,22 +3154,6 @@ def can_jump(nums: list[int]) -> bool:
     return True  # Will only reach here if nums has just one element
 ```
 
-**Visual Example:**
-```
-nums = [2, 3, 1, 1, 4]
-
-Iteration 1: i = 0, jump_length = 2
-  max_reach = max(0, 0 + 2) = 2
-  max_reach = 2 >= (5 - 1)? No
-
-Iteration 2: i = 1, jump_length = 3
-  i = 1 <= max_reach = 2? Yes
-  max_reach = max(2, 1 + 3) = 4
-  max_reach = 4 >= (5 - 1)? Yes, return True
-
-Result: True
-```
-
 Time Complexity: O(n) - We traverse the array once
 Space Complexity: O(1) - We only use a constant amount of extra space
 
@@ -3141,27 +3184,6 @@ def least_interval(tasks: list[str], n: int) -> int:
     # Calculate the length of schedule
     # Either we have enough distinct tasks to fill in between, or we need idle periods
     return max(len(tasks), (max_count - 1) * (n + 1) + max_count_tasks)
-```
-
-**Visual Example:**
-```
-tasks = ["A","A","A","B","B","B"], n = 2
-
-Count tasks: {"A": 3, "B": 3}
-max_count = 3
-max_count_tasks = 2 (both "A" and "B" occur 3 times)
-
-Calculate schedule length:
-  (max_count - 1) * (n + 1) + max_count_tasks
-= (3 - 1) * (2 + 1) + 2
-= 2 * 3 + 2
-= 8
-
-Compare with total tasks: max(6, 8) = 8
-
-Result: 8
-
-One possible schedule: A -> B -> idle -> A -> B -> idle -> A -> B
 ```
 
 Time Complexity: O(n) - Where n is the number of tasks (need to count them)
@@ -3309,20 +3331,6 @@ def climb_stairs(n: int) -> int:
     return dp[n]
 ```
 
-**Visual Example:**
-```
-climb_stairs(5):
-
-Bottom-Up Approach:
-  dp[1] = 1
-  dp[2] = 2
-  dp[3] = dp[2] + dp[1] = 2 + 1 = 3
-  dp[4] = dp[3] + dp[2] = 3 + 2 = 5
-  dp[5] = dp[4] + dp[3] = 5 + 3 = 8
-  
-  Result: 8
-```
-
 Time Complexity: O(n) - We compute each step once
 Space Complexity: O(n) - For the memoization table or DP array
 
@@ -3350,32 +3358,6 @@ def coin_change(coins: list[int], amount: int) -> int:
                 dp[i] = min(dp[i], dp[i - coin] + 1)
     
     return dp[amount] if dp[amount] <= amount else -1
-```
-
-**Visual Example:**
-```
-coin_change([1, 2, 5], 11):
-
-Initialize: dp = [0, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]
-
-For amount = 1:
-  coin = 1: dp[1] = min(12, dp[0] + 1) = min(12, 1) = 1
-  dp = [0, 1, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]
-
-For amount = 2:
-  coin = 1: dp[2] = min(12, dp[1] + 1) = min(12, 2) = 2
-  coin = 2: dp[2] = min(2, dp[0] + 1) = min(2, 1) = 1
-  dp = [0, 1, 1, 12, 12, 12, 12, 12, 12, 12, 12, 12]
-
-For amount = 3:
-  coin = 1: dp[3] = min(12, dp[2] + 1) = min(12, 2) = 2
-  coin = 2: dp[3] = min(2, dp[1] + 1) = min(2, 2) = 2
-  dp = [0, 1, 1, 2, 12, 12, 12, 12, 12, 12, 12, 12]
-
-...and so on...
-
-Final dp = [0, 1, 1, 2, 2, 1, 2, 2, 3, 3, 2, 3]
-Result: dp[11] = 3
 ```
 
 Time Complexity: O(amount * n) where n is the number of coins
@@ -3409,33 +3391,6 @@ def length_of_lis(nums: list[int]) -> int:
     return max(dp)
 ```
 
-**Visual Example:**
-```
-length_of_lis([10, 9, 2, 5, 3, 7, 101, 18]):
-
-Initialize: dp = [1, 1, 1, 1, 1, 1, 1, 1]
-
-For i = 1 (nums[1] = 9):
-  j = 0 (nums[0] = 10): 9 < 10, no update
-  dp = [1, 1, 1, 1, 1, 1, 1, 1]
-
-For i = 2 (nums[2] = 2):
-  j = 0 (nums[0] = 10): 2 < 10, no update
-  j = 1 (nums[1] = 9): 2 < 9, no update
-  dp = [1, 1, 1, 1, 1, 1, 1, 1]
-
-For i = 3 (nums[3] = 5):
-  j = 0 (nums[0] = 10): 5 < 10, no update
-  j = 1 (nums[1] = 9): 5 < 9, no update
-  j = 2 (nums[2] = 2): 5 > 2, dp[3] = max(1, 1+1) = 2
-  dp = [1, 1, 1, 2, 1, 1, 1, 1]
-
-...and so on...
-
-Final dp = [1, 1, 1, 2, 2, 3, 4, 4]
-Result: max(dp) = 4
-```
-
 Time Complexity: O(n²) where n is the length of the array
 Space Complexity: O(n) for the dp array
 
@@ -3462,52 +3417,6 @@ def unique_paths(m: int, n: int) -> int:
             dp[i][j] = dp[i-1][j] + dp[i][j-1]
     
     return dp[m-1][n-1]
-```
-
-**Visual Example:**
-```
-unique_paths(3, 3):
-
-Initialize:
-dp = [
-  [1, 1, 1],
-  [1, ?, ?],
-  [1, ?, ?]
-]
-
-For i=1, j=1:
-  dp[1][1] = dp[0][1] + dp[1][0] = 1 + 1 = 2
-dp = [
-  [1, 1, 1],
-  [1, 2, ?],
-  [1, ?, ?]
-]
-
-For i=1, j=2:
-  dp[1][2] = dp[0][2] + dp[1][1] = 1 + 2 = 3
-dp = [
-  [1, 1, 1],
-  [1, 2, 3],
-  [1, ?, ?]
-]
-
-For i=2, j=1:
-  dp[2][1] = dp[1][1] + dp[2][0] = 2 + 1 = 3
-dp = [
-  [1, 1, 1],
-  [1, 2, 3],
-  [1, 3, ?]
-]
-
-For i=2, j=2:
-  dp[2][2] = dp[1][2] + dp[2][1] = 3 + 3 = 6
-dp = [
-  [1, 1, 1],
-  [1, 2, 3],
-  [1, 3, 6]
-]
-
-Result: dp[2][2] = 6
 ```
 
 Time Complexity: O(m * n)
@@ -3586,17 +3495,6 @@ def can_attend_meetings(intervals: list[list[int]]) -> bool:
     return True  # No overlaps
 ```
 
-**Visual Example:**
-```
-can_attend_meetings([[0, 30], [5, 10], [15, 20]]):
-
-Sort intervals: [[0, 30], [5, 10], [15, 20]]
-
-Check for overlaps:
-  intervals[1][0] = 5 < intervals[0][1] = 30? Yes, overlap!
-  Return False
-```
-
 Time Complexity: O(n log n) - Dominated by the sorting operation
 Space Complexity: O(1) - If we don't count the input, we use constant extra space
 
@@ -3628,37 +3526,6 @@ def merge(intervals: list[list[int]]) -> list[list[int]]:
     
     return merged
 ```
-
-**Visual Example:**
-```
-merge([[1, 3], [2, 6], [8, 10], [15, 18]]):
-
-Sort intervals: [[1, 3], [2, 6], [8, 10], [15, 18]]
-
-Initialize: merged = []
-
-Process [1, 3]:
-  merged is empty, add [1, 3]
-  merged = [[1, 3]]
-
-Process [2, 6]:
-  [2, 6] overlaps with [1, 3] (2 < 3)
-  Merge to [1, max(3, 6)] = [1, 6]
-  merged = [[1, 6]]
-
-Process [8, 10]:
-  [8, 10] doesn't overlap with [1, 6] (8 > 6)
-  Add [8, 10]
-  merged = [[1, 6], [8, 10]]
-
-Process [15, 18]:
-  [15, 18] doesn't overlap with [8, 10] (15 > 10)
-  Add [15, 18]
-  merged = [[1, 6], [8, 10], [15, 18]]
-
-Result: [[1, 6], [8, 10], [15, 18]]
-```
-
 Time Complexity: O(n log n) - Dominated by the sorting operation
 Space Complexity: O(n) - For the output array
 
@@ -3701,27 +3568,6 @@ def insert(intervals: list[list[int]], new_interval: list[int]) -> list[list[int
     return result
 ```
 
-**Visual Example:**
-```
-insert([[1, 3], [6, 9]], [2, 5]):
-
-Initialize: result = [], i = 0
-
-Process intervals before [2, 5]:
-  [1, 3]: 3 >= 2, so it overlaps, don't add yet
-
-Merge overlapping intervals:
-  merged_interval = [2, 5]
-  [1, 3]: 1 <= 5, merge to [min(2, 1), max(5, 3)] = [1, 5]
-  i = 1
-
-Process intervals after merged interval:
-  [6, 9]: 6 > 5, add to result
-  result = [[1, 5], [6, 9]]
-
-Result: [[1, 5], [6, 9]]
-```
-
 Time Complexity: O(n) - We process each interval once
 Space Complexity: O(n) - For the result array
 
@@ -3756,28 +3602,6 @@ def erase_overlap_intervals(intervals: list[list[int]]) -> int:
     
     # Return the number of intervals to remove
     return len(intervals) - count
-```
-
-**Visual Example:**
-```
-erase_overlap_intervals([[1, 2], [2, 3], [3, 4], [1, 3]]):
-
-Sort by end time: [[1, 2], [2, 3], [1, 3], [3, 4]]
-
-Initialize: count = 1, end = 2 (from intervals[0])
-
-Process [2, 3]:
-  2 >= 2? Yes, non-overlapping
-  count = 2, end = 3
-
-Process [1, 3]:
-  1 >= 3? No, overlapping, skip
-
-Process [3, 4]:
-  3 >= 3? Yes, non-overlapping
-  count = 3, end = 4
-
-Result: len(intervals) - count = 4 - 3 = 1
 ```
 
 Time Complexity: O(n log n) - Dominated by the sorting operation
@@ -3948,23 +3772,6 @@ def count_primes(n: int) -> int:
     return sum(is_prime)
 ```
 
-**Visual Example:**
-```
-count_primes(10):
-
-Initialize is_prime = [False, False, True, True, True, True, True, True, True, True]
-
-For i = 2:
-  Mark multiples: 4, 6, 8 as False
-  is_prime = [False, False, True, True, False, True, False, True, False, True]
-
-For i = 3:
-  Mark multiples: 9 as False
-  is_prime = [False, False, True, True, False, True, False, True, False, False]
-
-Sum of is_prime = 4 (indices 2, 3, 5, 7 are True)
-```
-
 Time Complexity: O(n log log n) - From Sieve of Eratosthenes
 Space Complexity: O(n) - For the is_prime array
 
@@ -4003,35 +3810,6 @@ def my_pow(x: float, n: int) -> float:
         n //= 2
     
     return result
-```
-
-**Visual Example:**
-```
-my_pow(2.0, 10):
-
-Initialize: result = 1, current_product = 2.0, n = 10
-
-Iteration 1:
-  n = 10 (even), skip multiplication
-  current_product = 2.0 * 2.0 = 4.0
-  n = 5
-
-Iteration 2:
-  n = 5 (odd), result = 1 * 4.0 = 4.0
-  current_product = 4.0 * 4.0 = 16.0
-  n = 2
-
-Iteration 3:
-  n = 2 (even), skip multiplication
-  current_product = 16.0 * 16.0 = 256.0
-  n = 1
-
-Iteration 4:
-  n = 1 (odd), result = 4.0 * 256.0 = 1024.0
-  current_product = 256.0 * 256.0 = 65536.0
-  n = 0
-
-Return: result = 1024.0
 ```
 
 Time Complexity: O(log n) - We halve n in each iteration
@@ -4074,23 +3852,6 @@ def is_happy(n: int) -> bool:
     return fast == 1
 ```
 
-**Visual Example:**
-```
-is_happy(19):
-
-Initialize: slow = 19, fast = 82 (get_next(19))
-
-Iteration 1:
-  slow = get_next(19) = 82
-  fast = get_next(get_next(82)) = get_next(68) = 100
-  slow != fast, continue
-
-Iteration 2:
-  slow = get_next(82) = 68
-  fast = get_next(get_next(100)) = get_next(1) = 1
-  fast == 1, return True
-```
-
 Time Complexity: O(log n) - The sequence converges quickly
 Space Complexity: O(1) - We only use a constant amount of extra space
 
@@ -4116,18 +3877,6 @@ def is_rectangle_overlap(rec1: list[int], rec2: list[int]) -> bool:
         return False
     
     return True
-```
-
-**Visual Example:**
-```
-is_rectangle_overlap([0, 0, 2, 2], [1, 1, 3, 3]):
-
-rec1[2] = 2 <= rec2[0] = 1? No
-rec2[2] = 3 <= rec1[0] = 0? No
-rec1[3] = 2 <= rec2[1] = 1? No
-rec2[3] = 3 <= rec1[1] = 0? No
-
-All checks pass, the rectangles overlap. Return True
 ```
 
 Time Complexity: O(1) - Just a few simple comparisons
