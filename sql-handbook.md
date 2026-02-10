@@ -1,5 +1,42 @@
 ``# SQL for Analytics: A Comprehensive Guide
 
+## Table of Contents
+
+### Part I: Foundations for Analytics
+
+* [1. SQL Refresher](#1-sql-refresher)
+* [2. Joins and Set Operations](#2-joins-and-set-operations)
+* [3. Aggregate Functions](#3-aggregate-functions)
+* [4. Window Functions](#4-window-functions)
+
+### Part II: Advanced SQL for Analytics
+
+* [1. Advanced Filtering and Logic](#1-advanced-filtering-and-logic)
+* [2. Advanced Join Techniques](#2-advanced-join-techniques)
+* [3. Time-Based Operations](#3-time-based-operations)
+* [4. User-Defined Functions for Analytics](#4-user-defined-functions-for-analytics)
+
+### Part III: Data Modeling for Analytics
+
+* [1. Dimensional Modeling Concepts](#1-dimensional-modeling-concepts)
+* [2. Star and Snowflake Schemas](#2-star-and-snowflake-schemas)
+* [3. Time and Date Dimensions](#3-time-and-date-dimensions)
+
+### Part IV: Performance Optimization
+
+* [1. Indexes and Query Plans](#1-indexes-and-query-plans)
+* [2. Query Optimization Techniques](#2-query-optimization-techniques)
+* [3. Identifying and Resolving Bottlenecks](#3-identifying-and-resolving-bottlenecks)
+
+### Part V: Distributed SQL and Large-Scale Analytics
+
+* [1. Columnar Storage Principles](#1-columnar-storage-principles)
+* [2. Partitioning and Distribution Strategies](#2-partitioning-and-distribution-strategies)
+* [3. Large-Scale Aggregation Techniques](#3-large-scale-aggregation-techniques)
+* [4. Incremental Processing](#4-incremental-processing)
+* [5. Modern Data Formats and Integration](#5-modern-data-formats-and-integration)
+* [6. Practical Optimization Techniques for Distributed Analytics](#6-practical-optimization-techniques-for-distributed-analytics)
+
 ## Part I: Foundations for Analytics
 
 ### 1. SQL Refresher

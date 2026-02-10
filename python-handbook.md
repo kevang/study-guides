@@ -1,5 +1,86 @@
 # Python Handbook
 
+## Table of Contents
+
+### Part I: Foundations of Python
+
+#### 1. Core Language Features
+* [Variables, Types, and Scoping](#variables-types-and-scoping)
+* [Data Structures: Lists, Tuples, Sets, and Dictionaries](#data-structures-lists-tuples-sets-and-dictionaries)
+* [Control Flow: Conditionals, Loops, and Exceptions](#control-flow-conditionals-loops-and-exceptions)
+* [List, Dictionary, and Set Comprehensions](#list-dictionary-and-set-comprehensions)
+* [Common Built-ins: `print`, `zip`, `sorted`, `enumerate`, `any`, `all`, `sum`, etc.](#common-built-ins-print-zip-sorted-enumerate-any-all-sum-etc)
+* [Arbitrary Precision Arithmetic](#arbitrary-precision-arithmetic)
+
+#### 2. Functions and Functional Programming
+* [Defining and Calling Functions](#defining-and-calling-functions)
+* [`map`, `filter`, `reduce`, and `lambda`](#map-filter-reduce-and-lambda)
+* [`functools`: `partial`, `lru_cache`, and `reduce`](#functools-partial-lru_cache-and-reduce)
+* [`itertools`: `chain`, `combinations`, `groupby`, etc.](#itertools-chain-combinations-groupby-etc)
+
+#### 3. Object-Oriented Programming
+* [Classes, Inheritance, and `super()`](#classes-inheritance-and-super)
+* [Special Methods: `__init__`, `__str__`, `__repr__`, etc.](#special-methods-__init__-__str__-__repr__-etc)
+* [Properties and Descriptors](#properties-and-descriptors)
+* [`@classmethod`, `@staticmethod`, and `@property`](#classmethod-staticmethod-and-property)
+
+### Part II: Intermediate Python
+
+#### 4. Advanced Functional Programming
+* [Decorators: Function and Class Decorators](#decorators-function-and-class-decorators)
+* [Context Managers: `__enter__` and `__exit__`, `contextlib`, and `contextmanager`](#context-managers-__enter__-and-__exit__-contextlib-and-contextmanager)
+* [Generators and Iterator Protocols](#generators-and-iterator-protocols)
+
+#### 5. Data Classes and Validation
+* [`@dataclass`, `field`, and Default Values](#dataclass-field-and-default-values)
+* [Pydantic.BaseModel for Data Validation](#pydanticbasemodel-for-data-validation)
+
+#### 6. Concurrency and Parallelism
+* [`threading` and `multiprocessing`](#threading-and-multiprocessing)
+* [`concurrent.futures` API](#concurrentfutures-api)
+* [Comparison of Concurrency Models](#comparison-of-concurrency-models)
+
+#### 7. Type Hints and Annotations
+* [Basic Type Annotations](#basic-type-annotations)
+* [`List`, `Dict`, `Union`, `Optional`, `TypeVar`, `Callable`](#list-dict-union-optional-typevar-callable)
+* [Type Checking with `mypy`](#type-checking-with-mypy)
+
+### Part III: Advanced Python
+
+#### 8. Asynchronous Programming
+* [`async def`, `await`, `async for`, and `async with`](#async-def-await-async-for-and-async-with)
+* [Asynchronous Context Managers and Generators](#asynchronous-context-managers-and-generators)
+* [Additional Asynchronous Patterns](#additional-asynchronous-patterns)
+
+#### 9. CPython Internals
+* [Bytecode and the Python Virtual Machine](#bytecode-and-the-python-virtual-machine)
+* [Python's Object Model: Everything is an Object](#pythons-object-model-everything-is-an-object)
+* [Memory Management and Garbage Collection](#memory-management-and-garbage-collection)
+* [Dictionary Implementation](#dictionary-implementation)
+* [List Implementation](#list-implementation)
+* [Integer Implementation and Arbitrary Precision](#integer-implementation-and-arbitrary-precision)
+* [The Global Interpreter Lock (GIL)](#the-global-interpreter-lock-gil)
+* [Extension Modules and the C API](#extension-modules-and-the-c-api)
+
+#### 10. Metaprogramming and Design Patterns
+* [Dunder Methods: `__init__`, `__repr__`, `__eq__`, `__lt__`, `__hash__`, `__getitem__`, etc.](#dunder-methods-__init__-__repr__-__eq__-__lt__-__hash__-__getitem__-etc)
+* [Design Patterns: Singleton, Factory, Builder, Adapter, Proxy, Command, Template Method](#design-patterns-singleton-factory-builder-adapter-proxy-command-template-method)
+* [Metaprogramming with `type()`, Dynamic Class Creation, `__new__`, Metaclasses, and `__metaclass__`](#metaprogramming-with-type-dynamic-class-creation-__new__-metaclasses-and-__metaclass__)
+* [Descriptors: `__get__`, `__set__`, `__delete__`, and Use Cases](#descriptors-__get__-__set__-__delete__-and-use-cases)
+
+#### 11. Memory Optimization and Extensions
+* [`__slots__` for Memory Optimization](#__slots__-for-memory-optimization)
+* [Monkey Patching and Dynamic Attributes](#monkey-patching-and-dynamic-attributes)
+* [C Extensions and Interfacing with C using `ctypes`/`cffi`](#c-extensions-and-interfacing-with-c-using-ctypescffi)
+
+#### 12. Profiling, Optimization, and Packaging
+* [Profiling with `cProfile`, `line_profiler`, and Memory Profiling](#profiling-with-cprofile-line_profiler-and-memory-profiling)
+* [Identifying and Fixing Bottlenecks](#identifying-and-fixing-bottlenecks)
+* [Packaging and Distributing Modules](#packaging-and-distributing-modules)
+
+#### 13. New Python Features
+* [Python 3.10 to 3.13 Features](#python-310-to-313-features)
+
 ### Part I: Foundations of Python
 
 ## 1. Core Language Features
