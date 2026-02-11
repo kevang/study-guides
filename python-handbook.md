@@ -10,6 +10,7 @@
 * [Control Flow: Conditionals, Loops, and Exceptions](#control-flow-conditionals-loops-and-exceptions)
 * [List, Dictionary, and Set Comprehensions](#list-dictionary-and-set-comprehensions)
 * [Common Built-ins: `print`, `zip`, `sorted`, `enumerate`, `any`, `all`, `sum`, etc.](#common-built-ins-print-zip-sorted-enumerate-any-all-sum-etc)
+* [`bin()`: Binary String Conversion](#bin-binary-string-conversion)
 * [Arbitrary Precision Arithmetic](#arbitrary-precision-arithmetic)
 
 #### 2. Functions and Functional Programming
@@ -23,6 +24,8 @@
 * [Special Methods: `__init__`, `__str__`, `__repr__`, etc.](#special-methods-__init__-__str__-__repr__-etc)
 * [Properties and Descriptors](#properties-and-descriptors)
 * [`@classmethod`, `@staticmethod`, and `@property`](#classmethod-staticmethod-and-property)
+* [Method Resolution Order (MRO) and C3 Linearization](#method-resolution-order-mro-and-c3-linearization)
+* [Abstract Base Classes and Virtual Subclassing](#abstract-base-classes-and-virtual-subclassing)
 
 ### Part II: Intermediate Python
 
@@ -35,22 +38,21 @@
 * [`@dataclass`, `field`, and Default Values](#dataclass-field-and-default-values)
 * [Pydantic.BaseModel for Data Validation](#pydanticbasemodel-for-data-validation)
 
-#### 6. Concurrency and Parallelism
+#### 6. Concurrency, Parallelism and Asnychronous Programming
 * [`threading` and `multiprocessing`](#threading-and-multiprocessing)
 * [`concurrent.futures` API](#concurrentfutures-api)
+* [`async def`, `await`, `async for`, and `async with`](#async-def-await-async-for-and-async-with)
+* [Asynchronous Context Managers and Generators](#asynchronous-context-managers-and-generators)
+* [Additional Asynchronous Patterns](#additional-asynchronous-patterns)
 * [Comparison of Concurrency Models](#comparison-of-concurrency-models)
 
 #### 7. Type Hints and Annotations
 * [Basic Type Annotations](#basic-type-annotations)
-* [`List`, `Dict`, `Union`, `Optional`, `TypeVar`, `Callable`](#list-dict-union-optional-typevar-callable)
-* [Type Checking with `mypy`](#type-checking-with-mypy)
+* [Advanced Type Annotations](#advanced-type-annotations)
+* [Protocols and Structural Typing](#protocols-and-structural-typing)
+* [Covariance and Contravariance](#covariance-and-contravariance)
 
 ### Part III: Advanced Python
-
-#### 8. Asynchronous Programming
-* [`async def`, `await`, `async for`, and `async with`](#async-def-await-async-for-and-async-with)
-* [Asynchronous Context Managers and Generators](#asynchronous-context-managers-and-generators)
-* [Additional Asynchronous Patterns](#additional-asynchronous-patterns)
 
 #### 9. CPython Internals
 * [Bytecode and the Python Virtual Machine](#bytecode-and-the-python-virtual-machine)
@@ -60,6 +62,7 @@
 * [List Implementation](#list-implementation)
 * [Integer Implementation and Arbitrary Precision](#integer-implementation-and-arbitrary-precision)
 * [The Global Interpreter Lock (GIL)](#the-global-interpreter-lock-gil)
+* [Object Interning and Memory Optimization](#object-interning-and-memory-optimization)
 * [Extension Modules and the C API](#extension-modules-and-the-c-api)
 
 #### 10. Metaprogramming and Design Patterns
@@ -79,7 +82,7 @@
 * [Packaging and Distributing Modules](#packaging-and-distributing-modules)
 
 #### 13. New Python Features
-* [Python 3.10 to 3.13 Features](#python-310-to-313-features)
+* [Python 3.10 to 3.14 Features](#python-310-to-314-features)
 
 ### Part I: Foundations of Python
 
@@ -327,6 +330,7 @@ print(person.get("job", "Unknown"))  # Outputs: Unknown (default if key not foun
 # Adding or updating elements
 person["job"] = "Engineer"
 person.update({"email": "alice@example.com", "phone": "555-1234"})
+person | {"email": "alice@example.com", "phone": "555-1234"}
 
 # Removing elements
 del person["age"]
@@ -338,9 +342,6 @@ person.clear()            # Remove all items
 keys = person.keys()      # Returns view of keys
 values = person.values()  # Returns view of values
 items = person.items()    # Returns view of (key, value) pairs
-
-# Dictionary comprehension
-squares = {x: x*x for x in range(6)}  # {0: 0, 1: 1, 2: 4, 3: 9, 4: 16, 5: 25}
 
 # Membership testing (checks keys)
 print("name" in person)   # Outputs: True
@@ -1289,7 +1290,7 @@ print(f"Result: {result}")  # Result: 50
 
 # Warning: eval() can execute any code, which can be dangerous
 # It's generally safer to avoid eval() for user input
-# Instead, use safer alternatives like ast.literal_eval() for limited parsing
+# Instead, use safer alternatives like ast.literal_eval() which only pases literal structures (strings, lists etc)
 import ast
 safe_input = input("Enter a list or dict literal: ")  # e.g., "[1, 2, 3]"
 try:
@@ -1312,6 +1313,25 @@ def safe_eval(expression):
 ```
 
 While `input()` is essential for interactive programs, `eval()` should be used with caution because it can execute arbitrary code.
+
+#### bin()
+
+The `bin()` function converts an integer to a binary string prefixed with '0b'.
+
+```python
+# Basic usage
+print(bin(5))    # '0b101'
+print(bin(10))   # '0b1010'
+print(bin(0))    # '0b0'
+
+# Using format() for alternative formatting
+print(format(5, 'b'))    # '101'
+print(format(5, '08b')) # '00000101'
+
+# Converting back from binary
+print(int('101', 2))    # 5
+print(int('0b101', 2))  # 5
+```
 
 ### Arbitrary Precision Arithmetic
 
@@ -1655,47 +1675,6 @@ print(result)  # "Hello, World!"
 
 # Accessing annotations
 print(add.__annotations__)  # {'a': <class 'int'>, 'b': <class 'int'>, 'return': <class 'int'>}
-
-# More complex annotations
-from typing import List, Dict, Union, Optional
-
-def process_data(items: List[int], options: Optional[Dict[str, str]] = None) -> Union[int, float]:
-    """
-    Process a list of integers based on provided options.
-    
-    Args:
-        items: A list of integers to process
-        options: Optional dictionary with processing options
-        
-    Returns:
-        The processed result as either an integer or float
-    """
-    if options and options.get('mode') == 'average':
-        return sum(items) / len(items)
-    return sum(items)
-
-# Run-time type checking with annotations
-# Using a third-party library like mypy for static type checking or:
-def enforce_types(func):
-    """Decorator to enforce type annotations at runtime."""
-    def wrapper(*args, **kwargs):
-        # Check argument types against annotations (simplified version)
-        for name, value in zip(func.__annotations__, args):
-            if name != 'return' and not isinstance(value, func.__annotations__[name]):
-                raise TypeError(f"Argument {name} must be {func.__annotations__[name]}")
-        result = func(*args, **kwargs)
-        # Check return type
-        if 'return' in func.__annotations__ and not isinstance(result, func.__annotations__['return']):
-            raise TypeError(f"Return value must be {func.__annotations__['return']}")
-        return result
-    return wrapper
-
-@enforce_types
-def multiply(a: int, b: int) -> int:
-    return a * b
-
-print(multiply(3, 4))      # 12
-# print(multiply(3, "4"))  # TypeError: Argument b must be <class 'int'>
 ```
 
 Docstrings and type annotations improve code readability and help catch errors early, especially when used with static type checkers like mypy.
@@ -1936,10 +1915,6 @@ print(product)  # 120 (1*2*3*4*5)
 # Finding maximum
 maximum = reduce(lambda x, y: x if x > y else y, numbers)
 print(maximum)  # 5
-
-# Finding minimum
-minimum = reduce(lambda x, y: x if x < y else y, numbers)
-print(minimum)  # 1
 
 # Concat strings
 words = ["hello", " ", "world", "!"]
@@ -2208,18 +2183,6 @@ print(fetch_data("api.example.com", "value1", "value3"))  # Different param, not
 ```
 
 `lru_cache()` is invaluable for improving performance of recursive functions, expensive computations, and API calls. The "LRU" stands for "Least Recently Used," meaning when the cache is full, the least recently used items are discarded first.
-
-#### reduce() (covered earlier)
-
-We've already covered `reduce()` in detail, but as a reminder, it's part of the `functools` module and applies a binary function cumulatively to the items of a sequence.
-
-```python
-from functools import reduce
-
-numbers = [1, 2, 3, 4, 5]
-sum_result = reduce(lambda x, y: x + y, numbers)
-print(sum_result)  # 15
-```
 
 #### Other useful functools utilities
 
@@ -2860,7 +2823,36 @@ print(d.method())  # B's method (follows MRO: D -> B -> C -> A)
 print(D.__mro__)   # Shows the Method Resolution Order
 ```
 
-Multiple inheritance can be powerful but adds complexity due to method resolution. Python uses the C3 linearization algorithm to determine the method resolution order (MRO), which dictates the order in which parent classes are searched for methods.
+#### Mixins
+
+Mixins are a form of multiple inheritance where a class provides methods to other classes without being intended for standalone use. They're a way to compose behaviors.
+
+```python
+class JSONMixin:
+    """Mixin that adds JSON serialization."""
+    
+    def to_json(self):
+        import json
+        return json.dumps(self.__dict__)
+
+class XMLMixin:
+    """Mixin that adds XML serialization."""
+    
+    def to_xml(self):
+        items = ' '.join(f'<{k}>{v}</{k}>' for k, v in self.__dict__.items())
+        return f'<object>{items}</object>'
+
+class Person(JSONMixin, XMLMixin):
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+
+p = Person("Alice", 30)
+print(p.to_json())  # {"name": "Alice", "age": 30}
+print(p.to_xml())   # <object><name>Alice</name><age>30</age></object>
+```
+
+Mixins allow horizontal composition of behaviors and are commonly used in frameworks like Django for adding functionality like authentication or caching.
 
 #### super()
 
@@ -3191,199 +3183,6 @@ print(attr_obj.missing)       # __getattribute__ called..., __getattr__ called..
 
 Attribute access special methods allow for customizing how objects handle attribute lookups, assignments, and deletions. These methods are often used for implementing dynamic attributes, proxy objects, and data validation.
 
-#### Context Manager Special Methods
-
-```python
-class File:
-    """A simple file context manager."""
-    
-    def __init__(self, filename, mode):
-        """Initialize with filename and mode."""
-        self.filename = filename
-        self.mode = mode
-        self.file = None
-    
-    def __enter__(self):
-        """Enter context: open file and return it."""
-        self.file = open(self.filename, self.mode)
-        return self.file
-    
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """Exit context: close file and handle exceptions."""
-        if self.file:
-            self.file.close()
-        # Return True to suppress exceptions, False to propagate
-        return False
-
-# Using the context manager
-try:
-    with File('example.txt', 'w') as f:
-        f.write('Hello, world!')
-    
-    with File('example.txt', 'r') as f:
-        content = f.read()
-        print(content)  # Hello, world!
-except FileNotFoundError:
-    print("File operations skipped (example.txt might not exist)")
-
-# Context manager with exception handling
-class SuppressErrors:
-    """A context manager that suppresses specified exceptions."""
-    
-    def __init__(self, *exceptions):
-        """Initialize with exceptions to suppress."""
-        self.exceptions = exceptions or (Exception,)
-    
-    def __enter__(self):
-        """Enter context."""
-        return self
-    
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """Exit context and handle exceptions."""
-        # Return True if exception should be suppressed
-        return exc_type is not None and issubclass(exc_type, self.exceptions)
-
-# Using the context manager to suppress specific exceptions
-with SuppressErrors(ZeroDivisionError):
-    print(1 / 0)  # Error suppressed
-    print("This won't be printed")
-
-print("Execution continues")
-
-with SuppressErrors(ValueError):
-    # This error won't be suppressed as it's not a ValueError
-    try:
-        print(1 / 0)
-    except ZeroDivisionError:
-        print("Error not suppressed")
-```
-
-Context manager special methods (`__enter__` and `__exit__`) allow classes to define behavior for setup and teardown operations in `with` statements. They're commonly used for resource management (file handling, database connections) and temporary state changes.
-
-#### Descriptor Special Methods
-
-```python
-class Validator:
-    """A descriptor that validates values before setting them."""
-    
-    def __init__(self, name, validation_func, error_msg):
-        """Initialize with attribute name, validation function, and error message."""
-        self.name = name
-        self.validation_func = validation_func
-        self.error_msg = error_msg
-    
-    def __get__(self, instance, owner):
-        """Get value from instance."""
-        if instance is None:
-            return self  # When accessed from class, return descriptor itself
-        return instance.__dict__.get(self.name, None)
-    
-    def __set__(self, instance, value):
-        """Validate and set value in instance."""
-        if not self.validation_func(value):
-            raise ValueError(f"{self.error_msg}: {value}")
-        instance.__dict__[self.name] = value
-    
-    def __delete__(self, instance):
-        """Delete value from instance."""
-        if self.name in instance.__dict__:
-            del instance.__dict__[self.name]
-
-
-class Person:
-    """A class using descriptors for validation."""
-    
-    name = Validator('name', lambda x: isinstance(x, str) and x, "Name must be a non-empty string")
-    age = Validator('age', lambda x: isinstance(x, int) and 0 <= x <= 120, "Age must be between 0 and 120")
-    email = Validator('email', lambda x: isinstance(x, str) and '@' in x, "Invalid email format")
-    
-    def __init__(self, name, age, email=None):
-        """Initialize with name, age, and optional email."""
-        self.name = name
-        self.age = age
-        if email:
-            self.email = email
-    
-    def __str__(self):
-        """String representation."""
-        return f"{self.name}, {self.age} years old"
-
-# Create a person
-person = Person("Alice", 30, "alice@example.com")
-print(person)  # Alice, 30 years old
-
-# Validation works on assignment
-try:
-    person.age = 150  # Too high
-except ValueError as e:
-    print(e)  # Age must be between 0 and 120: 150
-
-try:
-    person.email = "invalid-email"  # Missing @
-except ValueError as e:
-    print(e)  # Invalid email format: invalid-email
-
-# Valid assignments
-person.age = 35
-person.email = "alice.new@example.com"
-print(f"{person.name}, {person.age}, {person.email}")  # Alice, 35, alice.new@example.com
-
-# Access descriptor from class
-print(Person.name)  # <__main__.Validator object at ...>
-
-# Data descriptor example
-class NonNegative:
-    """A descriptor that ensures values are non-negative."""
-    
-    def __init__(self, name):
-        self.name = name
-        self.private_name = f"_{name}"
-    
-    def __get__(self, instance, owner):
-        if instance is None:
-            return self
-        return getattr(instance, self.private_name, 0)
-    
-    def __set__(self, instance, value):
-        if value < 0:
-            raise ValueError(f"{self.name} must be non-negative")
-        setattr(instance, self.private_name, value)
-
-class Product:
-    """A class representing a product with non-negative price and quantity."""
-    
-    price = NonNegative("price")
-    quantity = NonNegative("quantity")
-    
-    def __init__(self, name, price, quantity):
-        self.name = name
-        self.price = price
-        self.quantity = quantity
-    
-    @property
-    def total(self):
-        """Calculate total value."""
-        return self.price * self.quantity
-
-# Create a product
-product = Product("Widget", 10.0, 5)
-print(f"{product.name}: ${product.price} × {product.quantity} = ${product.total}")
-# Widget: $10.0 × 5 = $50.0
-
-# Try setting negative values
-try:
-    product.price = -1.0
-except ValueError as e:
-    print(e)  # price must be non-negative
-
-try:
-    product.quantity = -3
-except ValueError as e:
-    print(e)  # quantity must be non-negative
-```
-
-Descriptors provide a powerful way to define how attribute access is handled, enabling features like validation, computed properties, and type conversion at the attribute level.
-
 ### Properties and Descriptors
 
 Properties and descriptors allow for controlled access to object attributes, enabling validation, computed values, and other custom behavior.
@@ -3501,98 +3300,6 @@ except AttributeError as e:
 ```
 
 Properties allow for attribute-like access to methods, making it possible to hide implementation details and add behavior like validation or computation.
-
-#### Property Decorators
-
-Property decorators provide a cleaner syntax for defining properties.
-
-```python
-class Person:
-    """A class with properties for name and age."""
-    
-    def __init__(self, name, age):
-        """Initialize with name and age."""
-        self._name = name
-        self._age = age
-    
-    @property
-    def name(self):
-        """Get name."""
-        return self._name
-    
-    @name.setter
-    def name(self, value):
-        """Set name with validation."""
-        if not value or not isinstance(value, str):
-            raise ValueError("Name must be a non-empty string")
-        self._name = value
-    
-    @property
-    def age(self):
-        """Get age."""
-        return self._age
-    
-    @age.setter
-    def age(self, value):
-        """Set age with validation."""
-        if not isinstance(value, int) or value < 0 or value > 120:
-            raise ValueError("Age must be an integer between 0 and 120")
-        self._age = value
-    
-    @property
-    def is_adult(self):
-        """Check if person is an adult (read-only)."""
-        return self._age >= 18
-
-# Create person
-person = Person("Alice", 30)
-
-# Access properties
-print(f"Name: {person.name}")          # Name: Alice
-print(f"Age: {person.age}")            # Age: 30
-print(f"Is adult: {person.is_adult}")  # Is adult: True
-
-# Modify properties
-person.name = "Bob"
-person.age = 15
-print(f"Name: {person.name}")          # Name: Bob
-print(f"Age: {person.age}")            # Age: 15
-print(f"Is adult: {person.is_adult}")  # Is adult: False
-
-# Validation
-try:
-    person.name = ""  # Empty string
-except ValueError as e:
-    print(e)  # Name must be a non-empty string
-
-try:
-    person.age = 150  # Too high
-except ValueError as e:
-    print(e)  # Age must be an integer between 0 and 120
-
-# Property defined without decorators (old style)
-class OldStylePerson:
-    def __init__(self, name):
-        self._name = name
-    
-    def get_name(self):
-        return self._name
-    
-    def set_name(self, value):
-        if not value:
-            raise ValueError("Name cannot be empty")
-        self._name = value
-    
-    name = property(get_name, set_name, None, "Person's name")
-
-# Both styles work the same way
-old_person = OldStylePerson("Charlie")
-print(old_person.name)  # Charlie
-old_person.name = "David"
-print(old_person.name)  # David
-```
-
-Property decorators offer a more readable and maintainable way to define properties compared to the traditional approach.
 
 #### Custom Descriptors
 
@@ -3947,150 +3654,111 @@ print(rectangle.area())  # 24
 
 Static methods are useful for utility functions that are conceptually related to a class but don't need to access class or instance data. They improve code organization by keeping related functionality together.
 
-#### @property (Covered Earlier)
+### Method Resolution Order (MRO) and C3 Linearization
 
-The `@property` decorator transforms a method into a read-only property (covered in detail in the "Properties and Descriptors" section).
+Python uses the C3 linearization algorithm to determine the order in which base classes are searched when resolving method calls in multiple inheritance scenarios. This ensures a consistent and predictable method resolution order.
 
 ```python
-class Circle:
-    def __init__(self, radius):
-        self._radius = radius
-    
+class A:
+    def method(self):
+        print("A")
+
+class B:
+    def method(self):
+        print("B")
+
+class C(A, B):
+    pass
+
+class D(B, A):
+    pass
+
+c = C()
+c.method()  # Prints "A" - A comes before B in C's MRO
+
+d = D()
+d.method()  # Prints "B" - B comes before A in D's MRO
+
+# View the MRO
+print(C.mro())  # [<class '__main__.C'>, <class '__main__.A'>, <class '__main__.B'>, <class 'object'>]
+print(D.mro())  # [<class '__main__.D'>, <class '__main__.B'>, <class '__main__.A'>, <class 'object'>]
+```
+
+The C3 linearization algorithm ensures three properties:1. **Preservation of local precedence order**: In a class definition `class C(A, B)`, A is always searched before B.
+2. **Monotonicity**: If C inherits from B, and B inherits from A, then C's MRO won't place C before B or B before A in ways that violate the inheritance hierarchy.
+3. **Consistent super() behavior**: The `super()` call follows the MRO and always finds the next class in the sequence.
+
+### Abstract Base Classes and Virtual Subclassing
+
+Abstract Base Classes (ABCs) from the `abc` module allow you to define interfaces and enforce contracts without providing implementations. Virtual subclassing allows classes to register themselves as implementing an ABC without explicitly inheriting from it.
+
+```python
+from abc import ABC, abstractmethod
+
+# Abstract base class
+class Shape(ABC):
     @property
-    def radius(self):
-        return self._radius
+    @abstractmethod
+    def area(self):
+        pass
     
-    @radius.setter
-    def radius(self, value):
-        if value <= 0:
-            raise ValueError("Radius must be positive")
-        self._radius = value
+    @abstractmethod
+    def perimeter(self):
+        pass
+
+# Concrete implementation
+class Circle(Shape):
+    def __init__(self, radius):
+        self.radius = radius
     
     @property
     def area(self):
         import math
-        return math.pi * self._radius ** 2
+        return math.pi * self.radius ** 2
     
-    @property
-    def circumference(self):
+    def perimeter(self):
         import math
-        return 2 * math.pi * self._radius
+        return 2 * math.pi * self.radius
 
-# Using properties
+# Cannot instantiate abstract class
+# shape = Shape()  # TypeError
+
 circle = Circle(5)
-print(circle.radius)        # 5
-print(circle.area)          # 78.53981633974483
-print(circle.circumference)  # 31.41592653589793
-
-# Setting radius
-circle.radius = 7
-print(circle.radius)        # 7
-print(circle.area)          # 153.93804002589985
+print(circle.area())  # 78.53981633974483
 ```
 
-Properties allow for attribute-like access to methods, making it possible to add validation or computation to attribute access.
-
-#### Combining Decorators
-
-Decorators can be combined to create powerful patterns. Here's a class that uses `@classmethod`, `@staticmethod`, and `@property`:
+Virtual subclassing allows registration without inheritance:
 
 ```python
-class Temperature:
-    """A class for temperature conversions with various constructors."""
-    
-    def __init__(self, celsius):
-        """Initialize with temperature in Celsius."""
-        self._celsius = celsius
-    
-    @property
-    def celsius(self):
-        """Get temperature in Celsius."""
-        return self._celsius
-    
-    @celsius.setter
-    def celsius(self, value):
-        """Set temperature in Celsius, with validation."""
-        if value < -273.15:
-            raise ValueError("Temperature cannot be below absolute zero")
-        self._celsius = value
-    
-    @property
-    def fahrenheit(self):
-        """Get temperature in Fahrenheit."""
-        return self._celsius * 9/5 + 32
-    
-    @fahrenheit.setter
-    def fahrenheit(self, value):
-        """Set temperature in Fahrenheit, converting to Celsius."""
-        self.celsius = (value - 32) * 5/9
-    
-    @property
-    def kelvin(self):
-        """Get temperature in Kelvin."""
-        return self._celsius + 273.15
-    
-    @kelvin.setter
-    def kelvin(self, value):
-        """Set temperature in Kelvin, converting to Celsius."""
-        self.celsius = value - 273.15
-    
-    @classmethod
-    def from_fahrenheit(cls, fahrenheit):
-        """Create a Temperature from a Fahrenheit value."""
-        celsius = (fahrenheit - 32) * 5/9
-        return cls(celsius)
-    
-    @classmethod
-    def from_kelvin(cls, kelvin):
-        """Create a Temperature from a Kelvin value."""
-        celsius = kelvin - 273.15
-        return cls(celsius)
-    
-    @staticmethod
-    def is_valid_celsius(celsius):
-        """Check if a Celsius temperature is physically possible."""
-        return celsius >= -273.15
-    
-    @staticmethod
-    def celsius_to_fahrenheit(celsius):
-        """Convert Celsius to Fahrenheit."""
-        return celsius * 9/5 + 32
-    
-    @staticmethod
-    def fahrenheit_to_celsius(fahrenheit):
-        """Convert Fahrenheit to Celsius."""
-        return (fahrenheit - 32) * 5/9
+from abc import ABC, ABCMeta
 
-# Create temperatures using different constructors
-temp1 = Temperature(25)               # Regular constructor
-temp2 = Temperature.from_fahrenheit(77)  # Class method
-temp3 = Temperature.from_kelvin(300)     # Class method
+class Serializable(ABC):
+    @abstractmethod
+    def serialize(self):
+        pass
 
-# Check values
-print(f"temp1: {temp1.celsius}°C, {temp1.fahrenheit}°F, {temp1.kelvin}K")
-# temp1: 25°C, 77.0°F, 298.15K
-print(f"temp2: {temp2.celsius}°C, {temp2.fahrenheit}°F, {temp2.kelvin}K")
-# temp2: 25.0°C, 77.0°F, 298.15K
-print(f"temp3: {temp3.celsius}°C, {temp3.fahrenheit}°F, {temp3.kelvin}K")
-# temp3: 26.850000000000023°C, 80.33000000000004°F, 300K
+# Register a class as a virtual subclass
+class Point:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+    
+    def serialize(self):
+        return {"x": self.x, "y": self.y}
 
-# Using properties to change values
-temp1.fahrenheit = 68
-print(f"temp1: {temp1.celsius}°C, {temp1.fahrenheit}°F, {temp1.kelvin}K")
-# temp1: 20.0°C, 68.0°F, 293.15K
+# Register the class
+Serializable.register(Point)
 
-temp1.kelvin = 273.15
-print(f"temp1: {temp1.celsius}°C, {temp1.fahrenheit}°F, {temp1.kelvin}K")
-# temp1: 0°C, 32.0°F, 273.15K
-
-# Using static methods
-print(Temperature.is_valid_celsius(25))    # True
-print(Temperature.is_valid_celsius(-300))  # False
-print(Temperature.celsius_to_fahrenheit(0))  # 32.0
-print(Temperature.fahrenheit_to_celsius(212))  # 100.0
+# Now Point is considered a subclass of Serializable
+p = Point(1, 2)
+print(isinstance(p, Serializable))  # True
+print(issubclass(Point, Serializable))  # True
 ```
 
-Combining decorators allows for creating classes with rich functionality, including alternative constructors, utility methods, and controlled attribute access. This makes code more expressive, maintainable, and encapsulated.
+Virtual subclassing is useful for:
+- Plugin systems where classes register themselves
+- Integration with existing class hierarchies (e.g. make a third-party a subclass of our own abstract class)
+- Duck typing with type checking support
 
 ## Part II: Intermediate Python
 
@@ -5068,17 +4736,16 @@ fib_nums = list(fibonacci_sequence(10))
 print(fib_nums)  # [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]
 
 # Generator with send() method
-def echo_generator():
-    """Echo back the values sent to the generator."""
+def doubling_generator():
+    """Echo back double the values sent to the generator."""
     result = yield None  # Initial yield to start the generator
     while True:
-        result = yield result  # Yield the received value
+        result = yield 2*result  # Yield the received value
 
-echo = echo_generator()
-next(echo)  # Prime the generator
-print(echo.send("Hello"))  # Hello
-print(echo.send(42))       # 42
-print(echo.send([1, 2, 3]))  # [1, 2, 3]
+doubler = doubling_generator()
+next(doubler)  # Prime the generator
+print(doubler.send(42))       # 84
+print(doubler.send([1, 2, 3]))  # [1, 2, 3, 1, 2, 3]
 
 # Generator with throw() and close() methods
 def resilient_generator():
@@ -5229,81 +4896,6 @@ try:
 except StopIteration:
     print("Iterator exhausted")
 
-# Making an iterable but not an iterator
-class Range:
-    """A simple recreation of Python's range."""
-    
-    def __init__(self, start, stop=None, step=1):
-        """Initialize with start, stop, and step."""
-        if stop is None:
-            self.start = 0
-            self.stop = start
-        else:
-            self.start = start
-            self.stop = stop
-        
-        self.step = step
-    
-    def __iter__(self):
-        """Return a new iterator each time."""
-        return RangeIterator(self.start, self.stop, self.step)
-    
-    def __len__(self):
-        """Return the number of elements."""
-        return max(0, (self.stop - self.start + self.step - 1) // self.step)
-    
-    def __repr__(self):
-        """Return a string representation."""
-        if self.start == 0 and self.step == 1:
-            return f"Range({self.stop})"
-        elif self.step == 1:
-            return f"Range({self.start}, {self.stop})"
-        else:
-            return f"Range({self.start}, {self.stop}, {self.step})"
-
-class RangeIterator:
-    """An iterator for the Range class."""
-    
-    def __init__(self, start, stop, step):
-        """Initialize with start, stop, and step."""
-        self.current = start
-        self.stop = stop
-        self.step = step
-    
-    def __iter__(self):
-        """Return self as iterator."""
-        return self
-    
-    def __next__(self):
-        """Return the next value or raise StopIteration."""
-        if (self.step > 0 and self.current >= self.stop) or \
-           (self.step < 0 and self.current <= self.stop):
-            raise StopIteration
-        
-        current = self.current
-        self.current += self.step
-        return current
-
-# Using the custom Range class
-for num in Range(5):
-    print(num, end=' ')  # 0 1 2 3 4
-
-print()  # Newline
-
-for num in Range(2, 10, 2):
-    print(num, end=' ')  # 2 4 6 8
-
-print()  # Newline
-
-# Creating multiple iterators from the same iterable
-r = Range(3)
-it1 = iter(r)
-it2 = iter(r)
-
-print(next(it1))  # 0
-print(next(it1))  # 1
-print(next(it2))  # 0 (independent iterator)
-
 # Sentinel pattern with iter()
 def read_until_sentinel(file_obj, sentinel):
     """Read lines from a file until the sentinel value is found."""
@@ -5327,17 +4919,6 @@ try:
     os.remove(file_path)
 except Exception as e:
     print(f"Error: {e}")
-
-# Combining iterators
-def chain_iterators(*iterables):
-    """Chain multiple iterables together."""
-    for iterable in iterables:
-        for item in iterable:
-            yield item
-
-# Using the custom chain function
-result = chain_iterators([1, 2], [3, 4, 5], [6])
-print(list(result))  # [1, 2, 3, 4, 5, 6]
 
 # Lazy evaluation with iterators
 def is_prime(n):
@@ -5367,100 +4948,6 @@ def primes():
 from itertools import islice
 first_10_primes = list(islice(primes(), 10))
 print(first_10_primes)  # [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
-
-# Implementing the iterable protocol for a binary tree
-class Node:
-    """A node in a binary tree."""
-    
-    def __init__(self, value, left=None, right=None):
-        """Initialize with a value and optional left and right children."""
-        self.value = value
-        self.left = left
-        self.right = right
-
-class BinaryTree:
-    """A binary tree that supports iteration in different orders."""
-    
-    def __init__(self, root=None):
-        """Initialize with an optional root node."""
-        self.root = root
-    
-    def __iter__(self):
-        """Default to in-order traversal."""
-        return self.inorder()
-    
-    def inorder(self):
-        """In-order traversal: left, root, right."""
-        def _inorder(node):
-            if node:
-                yield from _inorder(node.left)
-                yield node.value
-                yield from _inorder(node.right)
-        
-        return _inorder(self.root)
-    
-    def preorder(self):
-        """Pre-order traversal: root, left, right."""
-        def _preorder(node):
-            if node:
-                yield node.value
-                yield from _preorder(node.left)
-                yield from _preorder(node.right)
-        
-        return _preorder(self.root)
-    
-    def postorder(self):
-        """Post-order traversal: left, right, root."""
-        def _postorder(node):
-            if node:
-                yield from _postorder(node.left)
-                yield from _postorder(node.right)
-                yield node.value
-        
-        return _postorder(self.root)
-    
-    def levelorder(self):
-        """Level-order traversal (breadth-first)."""
-        if not self.root:
-            return
-        
-        queue = [self.root]
-        while queue:
-            node = queue.pop(0)
-            yield node.value
-            
-            if node.left:
-                queue.append(node.left)
-            if node.right:
-                queue.append(node.right)
-
-# Create a sample binary tree
-#       1
-#      / \
-#     2   3
-#    / \   \
-#   4   5   6
-root = Node(1,
-    Node(2,
-        Node(4),
-        Node(5)
-    ),
-    Node(3,
-        None,
-        Node(6)
-    )
-)
-
-tree = BinaryTree(root)
-
-# Try different traversal orders
-print("In-order:    ", list(tree.inorder()))      # [4, 2, 5, 1, 3, 6]
-print("Pre-order:   ", list(tree.preorder()))     # [1, 2, 4, 5, 3, 6]
-print("Post-order:  ", list(tree.postorder()))    # [4, 5, 2, 6, 3, 1]
-print("Level-order: ", list(tree.levelorder()))   # [1, 2, 3, 4, 5, 6]
-
-# Default iteration uses in-order traversal
-print("Default:     ", list(tree))                # [4, 2, 5, 1, 3, 6]
 ```
 
 The iterator protocol is a fundamental part of Python, enabling a consistent way to iterate over different types of collections. By implementing `__iter__()` and `__next__()`, you can make custom classes work seamlessly with Python's iteration tools, including for loops, list comprehensions, and the various functions in the `itertools` module.
@@ -5649,8 +5136,6 @@ The `field()` function provides fine-grained control over how fields behave in d
 
 ```python
 from dataclasses import dataclass, field, asdict, astuple, replace, InitVar, make_dataclass
-import json
-from typing import List, Dict, ClassVar, Optional
 
 # Post-initialization processing
 @dataclass
@@ -5699,7 +5184,7 @@ class Config:
     
     # Instance variables
     name: str
-    settings: Dict[str, str] = field(default_factory=dict)
+    settings: dict[str, str] = field(default_factory=dict)
     
     def get_version_info(self):
         """Return version information."""
@@ -5725,7 +5210,7 @@ class User:
     """A user with name, email, and roles."""
     name: str
     email: str
-    roles: List[str] = field(default_factory=list)
+    roles: list[str] = field(default_factory=list)
     active: bool = True
 
 # Create an instance
@@ -5739,10 +5224,6 @@ print(user_dict)  # {'name': 'Alice', 'email': 'alice@example.com', 'roles': ['a
 user_tuple = astuple(user)
 print(user_tuple)  # ('Alice', 'alice@example.com', ['admin', 'editor'], True)
 
-# Convert to JSON
-user_json = json.dumps(asdict(user))
-print(user_json)  # {"name": "Alice", "email": "alice@example.com", "roles": ["admin", "editor"], "active": true}
-
 # Creating a new instance with changes
 updated_user = replace(user, active=False, roles=["viewer"])
 print(user)        # User(name='Alice', email='alice@example.com', roles=['admin', 'editor'], active=True)
@@ -5752,7 +5233,7 @@ print(updated_user)  # User(name='Alice', email='alice@example.com', roles=['vie
 Person = make_dataclass('Person', 
                       [('name', str), 
                        ('age', int, field(default=0)),
-                       ('email', Optional[str], None)],
+                       ('email', str | None, None)],
                       namespace={'greeting': lambda self: f"Hello, my name is {self.name}"})
 
 # Create an instance of the dynamically created class
@@ -5803,7 +5284,6 @@ Pydantic is a third-party library that provides data validation and settings man
 ```python
 # Basic pydantic model
 from pydantic import BaseModel, ValidationError, Field
-from typing import List, Dict, Optional, Union
 from datetime import datetime, date
 import uuid
 
@@ -5812,9 +5292,9 @@ class User(BaseModel):
     id: int
     name: str
     email: str
-    age: Optional[int] = None
+    age: int | None = None
     is_active: bool = True
-    tags: List[str] = []
+    tags: list[str] = []
 
 # Create valid instances
 try:
@@ -5845,7 +5325,7 @@ class Product(BaseModel):
     id: int = Field(..., gt=0, description="Unique product identifier")
     name: str = Field(..., min_length=1, max_length=100)
     price: float = Field(..., gt=0)
-    description: Optional[str] = Field(None, max_length=1000)
+    description: str | None = Field(None, max_length=1000)
     sku: str = Field(..., regex=r"^[A-Z]{2}-\d{6}$")  # Format: XX-123456
     in_stock: bool = True
     created_at: datetime = Field(default_factory=datetime.now)
@@ -5883,7 +5363,6 @@ Pydantic provides robust data validation based on Python type annotations, makin
 # Nested models
 from pydantic import BaseModel, Field, EmailStr, validator, root_validator
 from enum import Enum
-from typing import List, Dict, Optional, Set
 from datetime import datetime, date
 
 class Role(str, Enum):
@@ -5905,8 +5384,8 @@ class User(BaseModel):
     id: int
     name: str
     email: EmailStr  # Validates email format
-    roles: Set[Role] = set()  # Using enum for roles
-    address: Optional[Address] = None
+    roles: set[Role] = set()  # Using enum for roles
+    address: Address | None = None
     created_at: datetime = Field(default_factory=datetime.now)
 
 # Create a user with nested address
@@ -5931,7 +5410,7 @@ except ValidationError as e:
 class Order(BaseModel):
     """An order with custom validation."""
     id: str = Field(..., regex=r"^ORD-\d{8}$")  # Format: ORD-12345678
-    items: List[Dict[str, Union[str, float, int]]]
+    items: list[dict[str, str | float | int]]
     customer_id: int
     total: float = 0.0
     status: str = "pending"
@@ -5996,7 +5475,7 @@ class Conversion(BaseModel):
     integer: int
     floating: float
     boolean: bool
-    string_list: List[str]
+    string_list: list[str]
     date_value: date
     datetime_value: datetime
 
@@ -6684,37 +6163,6 @@ with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
     for num, result in zip(numbers, results):
         print(f"{num} squared is {result}")
 
-# Downloading URLs with ThreadPoolExecutor
-def download_url(url):
-    """Download a URL and return its content length."""
-    try:
-        response = requests.get(url, timeout=10)
-        print(f"Downloaded {url}: {len(response.content)} bytes")
-        return len(response.content)
-    except Exception as e:
-        print(f"Error downloading {url}: {e}")
-        return 0
-
-urls = [
-    "https://www.python.org/",
-    "https://docs.python.org/",
-    "https://pypi.org/",
-    "https://peps.python.org/"
-]
-
-with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
-    # Start the download tasks and get Future objects
-    future_to_url = {executor.submit(download_url, url): url for url in urls}
-    
-    # Process results as they complete
-    for future in concurrent.futures.as_completed(future_to_url):
-        url = future_to_url[future]
-        try:
-            size = future.result()
-            print(f"Size of {url}: {size} bytes")
-        except Exception as e:
-            print(f"Error processing {url}: {e}")
-
 # ProcessPoolExecutor for CPU-bound tasks
 def compute_factorial(n):
     """Compute the factorial of n."""
@@ -6738,39 +6186,6 @@ with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
             print(f"Factorial of {num}: {result}")
         except Exception as e:
             print(f"Error computing factorial of {num}: {e}")
-
-# Mixing ThreadPoolExecutor and ProcessPoolExecutor
-def io_bound_task(n):
-    """Simulate an I/O-bound task."""
-    print(f"Starting I/O task {n}")
-    time.sleep(random.uniform(0.5, 2))
-    print(f"Finished I/O task {n}")
-    return f"I/O result {n}"
-
-def cpu_bound_task(n):
-    """Simulate a CPU-bound task."""
-    print(f"Starting CPU task {n} in process {os.getpid()}")
-    result = 0
-    for i in range(10**7):  # Perform a lot of calculations
-        result += i
-    print(f"Finished CPU task {n}")
-    return f"CPU result {n}: {result}"
-
-# Run I/O-bound tasks in threads
-print("Running I/O-bound tasks in ThreadPoolExecutor")
-with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-    io_futures = [executor.submit(io_bound_task, i) for i in range(5)]
-    
-    for future in concurrent.futures.as_completed(io_futures):
-        print(future.result())
-
-# Run CPU-bound tasks in processes
-print("Running CPU-bound tasks in ProcessPoolExecutor")
-with concurrent.futures.ProcessPoolExecutor(max_workers=3) as executor:
-    cpu_futures = [executor.submit(cpu_bound_task, i) for i in range(3)]
-    
-    for future in concurrent.futures.as_completed(cpu_futures):
-        print(future.result())
 
 # Advanced features with futures
 def long_running_task(name, duration, fail=False):
@@ -6827,552 +6242,6 @@ with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
 ```
 
 The `concurrent.futures` module provides a higher-level interface for working with threads and processes, making it easier to run functions asynchronously and handle their results. It's particularly useful for tasks like parallel downloads, parallel computation, and managing task dependencies.
-
-### Comparison of Concurrency Models
-
-```python
-import threading
-import multiprocessing
-import concurrent.futures
-import time
-import math
-import os
-
-# Define a CPU-bound task
-def cpu_task(n):
-    """A CPU-intensive task that calculates primes up to n."""
-    count = 0
-    for num in range(2, n + 1):
-        is_prime = True
-        for i in range(2, int(math.sqrt(num)) + 1):
-            if num % i == 0:
-                is_prime = False
-                break
-        if is_prime:
-            count += 1
-    return count
-
-# Define an I/O-bound task
-def io_task(n):
-    """A task that simulates I/O operations."""
-    print(f"Task {n} started")
-    time.sleep(1)  # Simulate I/O
-    print(f"Task {n} completed")
-    return n
-
-# Run CPU-bound tasks sequentially
-def run_sequential(func, tasks):
-    """Run tasks sequentially."""
-    start = time.time()
-    results = [func(task) for task in tasks]
-    end = time.time()
-    return results, end - start
-
-# Run CPU-bound tasks with threading
-def run_threading(func, tasks):
-    """Run tasks using threads."""
-    start = time.time()
-    
-    threads = []
-    results = [None] * len(tasks)
-    
-    def worker(i, task):
-        results[i] = func(task)
-    
-    for i, task in enumerate(tasks):
-        t = threading.Thread(target=worker, args=(i, task))
-        threads.append(t)
-        t.start()
-    
-    for t in threads:
-        t.join()
-    
-    end = time.time()
-    return results, end - start
-
-# Run CPU-bound tasks with multiprocessing
-def run_multiprocessing(func, tasks):
-    """Run tasks using processes."""
-    start = time.time()
-    
-    with multiprocessing.Pool() as pool:
-        results = pool.map(func, tasks)
-    
-    end = time.time()
-    return results, end - start
-
-# Run CPU-bound tasks with concurrent.futures ThreadPoolExecutor
-def run_thread_executor(func, tasks):
-    """Run tasks using a thread pool executor."""
-    start = time.time()
-    
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = list(executor.map(func, tasks))
-    
-    end = time.time()
-    return results, end - start
-
-# Run CPU-bound tasks with concurrent.futures ProcessPoolExecutor
-def run_process_executor(func, tasks):
-    """Run tasks using a process pool executor."""
-    start = time.time()
-    
-    with concurrent.futures.ProcessPoolExecutor() as executor:
-        results = list(executor.map(func, tasks))
-    
-    end = time.time()
-    return results, end - start
-
-# Compare all models with CPU-bound tasks
-def compare_cpu_bound():
-    """Compare concurrency models with CPU-bound tasks."""
-    print("\nComparing models with CPU-bound tasks:")
-    
-    tasks = [100000] * 8  # 8 tasks to find primes up to 100000
-    
-    print("\nSequential execution:")
-    results, duration = run_sequential(cpu_task, tasks)
-    print(f"Time: {duration:.2f} seconds, Results: {results}")
-    
-    print("\nThreading:")
-    results, duration = run_threading(cpu_task, tasks)
-    print(f"Time: {duration:.2f} seconds, Results: {results}")
-    
-    print("\nMultiprocessing:")
-    results, duration = run_multiprocessing(cpu_task, tasks)
-    print(f"Time: {duration:.2f} seconds, Results: {results}")
-    
-    print("\nThreadPoolExecutor:")
-    results, duration = run_thread_executor(cpu_task, tasks)
-    print(f"Time: {duration:.2f} seconds, Results: {results}")
-    
-    print("\nProcessPoolExecutor:")
-    results, duration = run_process_executor(cpu_task, tasks)
-    print(f"Time: {duration:.2f} seconds, Results: {results}")
-
-# Compare all models with I/O-bound tasks
-def compare_io_bound():
-    """Compare concurrency models with I/O-bound tasks."""
-    print("\nComparing models with I/O-bound tasks:")
-    
-    tasks = list(range(8))  # 8 tasks with 1 second sleep each
-    
-    print("\nSequential execution:")
-    results, duration = run_sequential(io_task, tasks)
-    print(f"Time: {duration:.2f} seconds, Results: {results}")
-    
-    print("\nThreading:")
-    results, duration = run_threading(io_task, tasks)
-    print(f"Time: {duration:.2f} seconds, Results: {results}")
-    
-    print("\nMultiprocessing:")
-    results, duration = run_multiprocessing(io_task, tasks)
-    print(f"Time: {duration:.2f} seconds, Results: {results}")
-    
-    print("\nThreadPoolExecutor:")
-    results, duration = run_thread_executor(io_task, tasks)
-    print(f"Time: {duration:.2f} seconds, Results: {results}")
-    
-    print("\nProcessPoolExecutor:")
-    results, duration = run_process_executor(io_task, tasks)
-    print(f"Time: {duration:.2f} seconds, Results: {results}")
-
-# Run the comparisons
-if __name__ == "__main__":
-    print("System Information:")
-    print(f"CPU Count: {os.cpu_count()}")
-    print(f"Python Version: {'.'.join(map(str, list(sys.version_info)[:3]))}")
-    
-    compare_cpu_bound()
-    compare_io_bound()
-```
-
-The comparison of concurrency models illustrates the strengths and weaknesses of each approach:
-
-1. **Threading**:
-   - Good for I/O-bound tasks where tasks spend time waiting for external operations.
-   - Limited by the Global Interpreter Lock (GIL) for CPU-bound tasks.
-   - Lower overhead compared to multiprocessing.
-
-2. **Multiprocessing**:
-   - Excellent for CPU-bound tasks that need true parallelism.
-   - Bypasses the GIL by using separate processes.
-   - Higher overhead due to process creation and inter-process communication.
-
-3. **concurrent.futures**:
-   - Provides a higher-level interface for both threading and multiprocessing.
-   - ThreadPoolExecutor is similar to threading for I/O-bound tasks.
-   - ProcessPoolExecutor is similar to multiprocessing for CPU-bound tasks.
-   - Easier to use with a more consistent API for both models.
-
-The appropriate model depends on the nature of your tasks:
-- For I/O-bound tasks (network operations, file I/O), use threading or ThreadPoolExecutor.
-- For CPU-bound tasks (computation, data processing), use multiprocessing or ProcessPoolExecutor.
-- For a mix of tasks or when you need a consistent API for both types, use concurrent.futures and choose the appropriate executor.
-
-Understanding these tradeoffs is crucial for writing efficient concurrent and parallel code in Python.
-
-## 7. Type Hints and Annotations
-
-Python 3.5+ introduced type hints, which provide a way to indicate the types of variables, function parameters, and return values. While Python remains dynamically typed, type hints enable static analysis tools to catch type-related bugs before runtime.
-
-### Basic Type Annotations
-
-```python
-# Basic variable annotations
-name: str = "Alice"
-age: int = 30
-height: float = 5.8
-is_student: bool = False
-
-# Function parameter and return annotations
-def greet(name: str) -> str:
-    """Greet a person by name."""
-    return f"Hello, {name}!"
-
-# Function with multiple parameters
-def calculate_rectangle_area(length: float, width: float) -> float:
-    """Calculate the area of a rectangle."""
-    return length * width
-
-# Functions without return values
-def log_message(message: str) -> None:
-    """Log a message to console."""
-    print(f"LOG: {message}")
-
-# Optional parameters with default values
-def create_user(name: str, age: int = 18, email: str = None) -> dict:
-    """Create a user dictionary."""
-    user = {"name": name, "age": age}
-    if email:
-        user["email"] = email
-    return user
-
-# Type annotations with nested data structures
-def process_user_data(user_id: int, data: dict) -> list:
-    """Process user data and return results."""
-    results = []
-    for key, value in data.items():
-        results.append(f"{user_id}: {key}={value}")
-    return results
-
-# Using the annotated functions
-message = greet("Bob")
-print(message)  # Hello, Bob!
-
-area = calculate_rectangle_area(3.5, 2.0)
-print(area)  # 7.0
-
-log_message("Operation completed")  # LOG: Operation completed
-
-user = create_user("Charlie", 25, "charlie@example.com")
-print(user)  # {'name': 'Charlie', 'age': 25, 'email': 'charlie@example.com'}
-
-results = process_user_data(1, {"name": "Alice", "score": 95})
-print(results)  # ['1: name=Alice', '1: score=95']
-```
-
-Basic type annotations provide a simple way to document the expected types of variables and function parameters/returns, which can make code more readable and help catch type-related errors early.
-
-### `List`, `Dict`, `Union`, `Optional`, `TypeVar`, `Callable`
-
-The `typing` module provides more advanced type annotations for complex types.
-
-```python
-from typing import List, Dict, Tuple, Set, Union, Optional, Any, Callable, TypeVar, Generic, cast
-
-# Container types
-names: List[str] = ["Alice", "Bob", "Charlie"]
-ages: Dict[str, int] = {"Alice": 30, "Bob": 25, "Charlie": 35}
-coordinates: Tuple[float, float] = (3.5, 2.0)
-tags: Set[str] = {"python", "programming", "tutorial"}
-
-# Nested containers
-matrix: List[List[int]] = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
-student_grades: Dict[str, List[int]] = {
-    "Alice": [85, 90, 95],
-    "Bob": [75, 80, 85]
-}
-
-# Union types (variables that could be one of several types)
-user_id: Union[int, str] = 123  # Could be int or str
-user_id = "ABC123"  # Still valid
-
-# Optional types (variables that could be None)
-email: Optional[str] = "user@example.com"  # Same as Union[str, None]
-email = None  # Valid
-
-# Any type (can be any type, disables type checking)
-dynamic_value: Any = 42
-dynamic_value = "Hello"  # Valid
-dynamic_value = [1, 2, 3]  # Valid
-
-# Functions with complex type annotations
-def get_user_by_id(user_id: Union[int, str]) -> Optional[Dict[str, Any]]:
-    """Get a user by ID, which could be an integer or string."""
-    users = {
-        123: {"name": "Alice", "email": "alice@example.com"},
-        "ABC123": {"name": "Bob", "email": "bob@example.com"}
-    }
-    return users.get(user_id)
-
-# Function with a callable parameter
-def apply_operation(x: int, y: int, operation: Callable[[int, int], int]) -> int:
-    """Apply a binary operation to two integers."""
-    return operation(x, y)
-
-def add(a: int, b: int) -> int:
-    """Add two numbers."""
-    return a + b
-
-def multiply(a: int, b: int) -> int:
-    """Multiply two numbers."""
-    return a * b
-
-# Using the function with different callables
-result1 = apply_operation(3, 4, add)
-print(result1)  # 7
-
-result2 = apply_operation(3, 4, multiply)
-print(result2)  # 12
-
-result3 = apply_operation(3, 4, lambda a, b: a - b)
-print(result3)  # -1
-
-# Using TypeVar for generic functions
-T = TypeVar('T')  # Define a type variable
-
-def first_element(items: List[T]) -> Optional[T]:
-    """Return the first element of a list, or None if empty."""
-    return items[0] if items else None
-
-# The function works with any type
-first_str = first_element(["Alice", "Bob"])  # Type: Optional[str]
-first_int = first_element([1, 2, 3])  # Type: Optional[int]
-
-print(first_str)  # Alice
-print(first_int)  # 1
-
-# Generic classes
-class Box(Generic[T]):
-    """A generic box that can hold any type of value."""
-    
-    def __init__(self, value: T) -> None:
-        self.value = value
-    
-    def get_value(self) -> T:
-        return self.value
-    
-    def set_value(self, value: T) -> None:
-        self.value = value
-
-# Create boxes with different types
-int_box = Box[int](42)
-str_box = Box[str]("Hello")
-
-print(int_box.get_value())  # 42
-print(str_box.get_value())  # Hello
-
-# Type casting (for cases where you know more than the type checker)
-def legacy_function(data):
-    """Legacy function without type annotations."""
-    return data
-
-# Use cast to tell the type checker about the return type
-data = legacy_function({1, 2, 3})
-set_data = cast(Set[int], data)  # No runtime effect, just for the type checker
-
-# Complex function signature
-def process_items(
-    items: List[Union[int, str]],
-    processors: Dict[str, Callable[[Union[int, str]], Any]],
-    default_processor: Optional[Callable[[Union[int, str]], Any]] = None
-) -> Dict[str, List[Any]]:
-    """Process items using different processors based on type."""
-    results: Dict[str, List[Any]] = {"int": [], "str": [], "other": []}
-    
-    for item in items:
-        if isinstance(item, int) and "int" in processors:
-            results["int"].append(processors["int"](item))
-        elif isinstance(item, str) and "str" in processors:
-            results["str"].append(processors["str"](item))
-        elif default_processor:
-            results["other"].append(default_processor(item))
-    
-    return results
-
-# Using the complex function
-processors = {
-    "int": lambda x: x * 2,
-    "str": lambda x: x.upper()
-}
-
-results = process_items([1, "hello", 3, "world"], processors)
-print(results)  # {'int': [2, 6], 'str': ['HELLO', 'WORLD'], 'other': []}
-```
-
-The `typing` module provides powerful tools for annotating complex types, which can help document your code, catch type errors early, and enable better IDE support.
-
-### Type Checking with `mypy`
-
-`mypy` is a static type checker for Python that can catch type errors before runtime based on type annotations.
-
-```python
-# Example file: example.py
-
-def add(a: int, b: int) -> int:
-    """Add two integers."""
-    return a + b
-
-def greet(name: str) -> str:
-    """Greet a person by name."""
-    return f"Hello, {name}!"
-
-# Correct usage
-x = add(1, 2)
-greeting = greet("Alice")
-
-# Type errors that mypy would catch
-y = add("1", 2)  # Error: "1" is not an int
-z = add(1, "2")  # Error: "2" is not an int
-name = greet(123)  # Error: 123 is not a str
-
-# Function with more complex typing
-from typing import List, Dict, Union, Optional
-
-def process_data(
-    data: List[Union[int, str]],
-    filter_nulls: bool = True
-) -> Dict[str, List[Union[int, str]]]:
-    """Process a list of data items."""
-    result = {"integers": [], "strings": []}
-    
-    for item in data:
-        if item is None and filter_nulls:
-            continue
-        
-        if isinstance(item, int):
-            result["integers"].append(item)
-        elif isinstance(item, str):
-            result["strings"].append(item)
-    
-    return result
-
-# Correct usage
-result1 = process_data([1, "hello", None, 42, "world"])
-
-# Type error that mypy would catch
-result2 = process_data(123)  # Error: 123 is not a List
-result3 = process_data([1, 2, 3], filter_nulls="yes")  # Error: "yes" is not a bool
-```
-
-To check a file with `mypy`, you'd run:
-
-```bash
-mypy example.py
-```
-
-And it would output something like:
-
-```
-example.py:17: error: Argument 1 to "add" has incompatible type "str"; expected "int"
-example.py:18: error: Argument 2 to "add" has incompatible type "str"; expected "int"
-example.py:19: error: Argument 1 to "greet" has incompatible type "int"; expected "str"
-example.py:47: error: Argument 1 to "process_data" has incompatible type "int"; expected "List[Union[int, str]]"
-example.py:48: error: Argument "filter_nulls" to "process_data" has incompatible type "str"; expected "bool"
-```
-
-#### Advanced `mypy` Configuration
-
-For more complex projects, you can configure `mypy` using a `mypy.ini` file:
-
-```ini
-# mypy.ini
-[mypy]
-python_version = 3.9
-warn_return_any = True
-warn_unused_configs = True
-disallow_untyped_defs = True
-disallow_incomplete_defs = True
-check_untyped_defs = True
-disallow_untyped_decorators = True
-no_implicit_optional = True
-strict_optional = True
-
-[mypy.plugins.numpy.*]
-disallow_untyped_defs = False
-
-[mypy-module_to_ignore.*]
-ignore_missing_imports = True
-disallow_untyped_defs = False
-```
-
-#### Type Stubs and `stub` Files
-
-For libraries without type annotations, you can use stub files (with a `.pyi` extension) to add type information. For example, if you have a module `legacy_module.py` without type annotations:
-
-```python
-# legacy_module.py
-def calculate_total(items):
-    return sum(items)
-
-def get_user_info(user_id):
-    users = {1: {"name": "Alice", "email": "alice@example.com"}}
-    return users.get(user_id)
-```
-
-You can create a stub file `legacy_module.pyi`:
-
-```python
-# legacy_module.pyi
-from typing import List, Dict, Any, Optional
-
-def calculate_total(items: List[float]) -> float: ...
-def get_user_info(user_id: int) -> Optional[Dict[str, str]]: ...
-```
-
-#### Third-Party Type Packages
-
-Many third-party libraries provide type stubs as separate packages. For example:
-
-```bash
-pip install types-requests  # Type stubs for requests
-pip install types-PyYAML    # Type stubs for PyYAML
-```
-
-#### Runtime Type Checking
-
-While `mypy` performs static type checking during development, you can also perform runtime type checking using libraries like `typeguard`:
-
-```python
-from typeguard import typechecked
-from typing import List, Dict
-
-@typechecked
-def sum_values(values: List[int]) -> int:
-    return sum(values)
-
-# This will work
-print(sum_values([1, 2, 3]))  # 6
-
-# This will raise a TypeError at runtime
-try:
-    print(sum_values(["1", "2", "3"]))
-except TypeError as e:
-    print(f"Type error: {e}")
-```
-
-#### Benefits of Type Checking
-
-1. **Catch errors early**: Find type-related bugs before running your code.
-2. **Better documentation**: Type annotations serve as documentation of expected types.
-3. **IDE support**: Modern IDEs use type hints for better autocompletion and error detection.
-4. **Safer refactoring**: Makes it easier to change code without introducing type errors.
-5. **Gradual adoption**: You can add type hints gradually to your codebase.
-
-Type hints and static type checking have become an important part of Python development, especially for larger projects and teams, helping to improve code quality and maintainability.
-
-## Part III: Advanced Python
 
 ## 8. Asynchronous Programming
 
@@ -7462,10 +6331,7 @@ async def main3():
     print(f"Total time: {end - start:.2f} seconds")
 
 # Running the third main coroutine
-try:
-    asyncio.run(main3())
-except ImportError:
-    print("aiohttp not available. Skipping URL fetching example.")
+asyncio.run(main3())
 
 # Creating an asynchronous context manager
 @asynccontextmanager
@@ -7566,35 +6432,6 @@ import aiofiles
 import contextlib
 import time
 import random
-
-# Asynchronous context manager with __aenter__ and __aexit__
-class AsyncResource:
-    """A class that implements the asynchronous context manager protocol."""
-    
-    def __init__(self, name):
-        self.name = name
-    
-    async def __aenter__(self):
-        """Asynchronously acquire the resource."""
-        print(f"Acquiring {self.name}...")
-        await asyncio.sleep(1)  # Simulate async acquisition
-        print(f"{self.name} acquired")
-        return self
-    
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        """Asynchronously release the resource."""
-        print(f"Releasing {self.name}...")
-        await asyncio.sleep(0.5)  # Simulate async release
-        print(f"{self.name} released")
-        return False  # Don't suppress exceptions
-
-# Using the asynchronous context manager
-async def use_resource():
-    """Use an asynchronous context manager."""
-    async with AsyncResource("Database") as db:
-        print(f"Using {db.name}")
-        await asyncio.sleep(2)  # Simulate async work
-        print(f"Done with {db.name}")
 
 # Asynchronous context manager with contextlib.asynccontextmanager
 @contextlib.asynccontextmanager
@@ -7789,7 +6626,6 @@ Here are more examples of advanced asynchronous patterns:
 ```python
 import asyncio
 import random
-from typing import List, Dict, Any, Optional
 import time
 
 # Pattern 1: Task cancellation
@@ -7841,7 +6677,7 @@ async def timeout_demo() -> None:
         print("Operation timed out")
 
 # Pattern 3: Gathering results as they complete
-async def fetch_data(id: int) -> Dict[str, Any]:
+async def fetch_data(id: int) -> dict[str, Any]:
     """Simulate fetching data from a remote source."""
     delay = random.uniform(0.5, 3.0)
     await asyncio.sleep(delay)
@@ -8179,6 +7015,395 @@ async def main() -> None:
 if __name__ == "__main__":
     asyncio.run(main())
 ```
+
+### Comparison of Concurrency Models
+
+Python offers several approaches to concurrent and parallel programming, each suited to different use cases:
+
+```python
+import threading
+import multiprocessing
+import concurrent.futures
+import asyncio
+import aiohttp
+import time
+import math
+
+# CPU-bound task
+def cpu_task(n):
+    count = 0
+    for num in range(2, n + 1):
+        is_prime = True
+        for i in range(2, int(math.sqrt(num)) + 1):
+            if num % i == 0:
+                is_prime = False
+                break
+        if is_prime:
+            count += 1
+    return count
+
+# I/O-bound task (sync)
+def io_task(n):
+    time.sleep(1)
+    return n
+
+# I/O-bound task (async)
+async def async_io_task(n):
+    await asyncio.sleep(1)
+    return n
+
+# Sequential execution
+def run_sequential(func, tasks):
+    start = time.time()
+    results = [func(task) for task in tasks]
+    return results, time.time() - start
+
+# Threading
+def run_threading(func, tasks):
+    start = time.time()
+    threads, results = [], [None] * len(tasks)
+    for i, task in enumerate(tasks):
+        t = threading.Thread(target=lambda idx, val: results.__setitem__(idx, func(val)), args=(i, task))
+        threads.append(t); t.start()
+    for t in threads: t.join()
+    return results, time.time() - start
+
+# Multiprocessing
+def run_multiprocessing(func, tasks):
+    start = time.time()
+    with multiprocessing.Pool() as pool:
+        results = pool.map(func, tasks)
+    return results, time.time() - start
+
+# ThreadPoolExecutor
+def run_thread_executor(func, tasks):
+    start = time.time()
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        results = list(executor.map(func, tasks))
+    return results, time.time() - start
+
+# ProcessPoolExecutor
+def run_process_executor(func, tasks):
+    start = time.time()
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        results = list(executor.map(func, tasks))
+    return results, time.time() - start
+
+# Async/await
+def run_async(tasks):
+    start = time.time()
+    results = asyncio.run(asyncio.gather(*[async_io_task(t) for t in tasks]))
+    return results, time.time() - start
+```
+
+**When to use each approach:**
+
+| Approach | Best For | Not Suitable For |
+|----------|----------|-----------------|
+| **Threading** | I/O-bound tasks (network, file I/O); simple concurrency needs | CPU-bound tasks (GIL limits parallelism) |
+| **Multiprocessing** | CPU-bound tasks (computation, data processing) requiring true parallelism | I/O-bound tasks (high overhead) |
+| **ThreadPoolExecutor** | Same as threading, but with cleaner API and built-in pooling | CPU-bound tasks |
+| **ProcessPoolExecutor** | Same as multiprocessing, but with cleaner API and built-in pooling | I/O-bound tasks |
+| **Async/await** | High-volume I/O (many concurrent network requests); servers | CPU-bound tasks; simple one-off operations |
+
+**Key differences:**
+
+1. **Threading**: Multiple threads share the same GIL. Good for I/O-bound work where threads spend time waiting. Limited true parallelism for CPU tasks.
+
+2. **Multiprocessing**: Separate processes bypass the GIL entirely. True parallelism but higher overhead from process creation and IPC.
+
+3. **concurrent.futures**: High-level wrappers around threading/multiprocessing. Same tradeoffs but easier API with futures, timeouts, and exception handling.
+
+4. **Async/await**: Cooperative multitasking using a single thread. Extremely efficient for I/O when you have thousands of concurrent operations (e.g., web servers). Requires async-compatible libraries. Not true parallelism—uses event loop to switch between tasks during I/O waits.
+
+**Summary:** Use threading for simple I/O-bound scripts, multiprocessing for CPU-intensive work, concurrent.futures for cleaner APIs, and async/await for high-scale I/O operations or building servers.
+
+## 7. Type Hints and Annotations
+
+Python 3.5+ introduced type hints, which provide a way to indicate the types of variables, function parameters, and return values. While Python remains dynamically typed, type hints enable static analysis tools to catch type-related bugs before runtime.
+
+### Basic Type Annotations
+
+```python
+# Basic variable annotations
+name: str = "Alice"
+age: int = 30
+height: float = 5.8
+is_student: bool = False
+
+# Function parameter and return annotations
+def greet(name: str) -> str:
+    """Greet a person by name."""
+    return f"Hello, {name}!"
+
+# Function with multiple parameters
+def calculate_rectangle_area(length: float, width: float) -> float:
+    """Calculate the area of a rectangle."""
+    return length * width
+
+# Functions without return values
+def log_message(message: str) -> None:
+    """Log a message to console."""
+    print(f"LOG: {message}")
+
+# Optional parameters with default values
+def create_user(name: str, age: int = 18, email: str = None) -> dict:
+    """Create a user dictionary."""
+    user = {"name": name, "age": age}
+    if email:
+        user["email"] = email
+    return user
+
+# Type annotations with nested data structures
+def process_user_data(user_id: int, data: dict) -> list:
+    """Process user data and return results."""
+    results = []
+    for key, value in data.items():
+        results.append(f"{user_id}: {key}={value}")
+    return results
+
+# Using the annotated functions
+message = greet("Bob")
+print(message)  # Hello, Bob!
+
+area = calculate_rectangle_area(3.5, 2.0)
+print(area)  # 7.0
+
+log_message("Operation completed")  # LOG: Operation completed
+
+user = create_user("Charlie", 25, "charlie@example.com")
+print(user)  # {'name': 'Charlie', 'age': 25, 'email': 'charlie@example.com'}
+
+results = process_user_data(1, {"name": "Alice", "score": 95})
+print(results)  # ['1: name=Alice', '1: score=95']
+```
+
+Basic type annotations provide a simple way to document the expected types of variables and function parameters/returns, which can make code more readable and help catch type-related errors early.
+
+### Advanced Type Annotations
+
+The `typing` module provides more advanced type annotations for complex types.
+
+```python
+from typing import Any, Callable, TypeVar, Generic, cast
+
+# Container types
+names: list[str] = ["Alice", "Bob", "Charlie"]
+ages: dict[str, int] = {"Alice": 30, "Bob": 25, "Charlie": 35}
+coordinates: tuple[float, float] = (3.5, 2.0)
+tags: set[str] = {"python", "programming", "tutorial"}
+
+# Nested containers
+matrix: list[list[int]] = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+student_grades: dict[str, list[int]] = {
+    "Alice": [85, 90, 95],
+    "Bob": [75, 80, 85]
+}
+
+# Union types (variables that could be one of several types)
+user_id: int | str = 123  # Could be int or str
+user_id = "ABC123"  # Still valid
+
+# Optional types (variables that could be None)
+email: str | None = "user@example.com"  # Same as Union[str, None]
+email = None  # Valid
+
+# Any type (can be any type, disables type checking)
+dynamic_value: Any = 42
+dynamic_value = "Hello"  # Valid
+dynamic_value = [1, 2, 3]  # Valid
+
+# Functions with complex type annotations
+def get_user_by_id(user_id: int | str) -> dict[str, Any] | None:
+    """Get a user by ID, which could be an integer or string."""
+    users = {
+        123: {"name": "Alice", "email": "alice@example.com"},
+        "ABC123": {"name": "Bob", "email": "bob@example.com"}
+    }
+    return users.get(user_id)
+
+# Function with a callable parameter
+def apply_operation(x: int, y: int, operation: Callable[[int, int], int]) -> int:
+    """Apply a binary operation to two integers."""
+    return operation(x, y)
+
+def add(a: int, b: int) -> int:
+    """Add two numbers."""
+    return a + b
+
+def multiply(a: int, b: int) -> int:
+    """Multiply two numbers."""
+    return a * b
+
+# Using the function with different callables
+result1 = apply_operation(3, 4, add)
+print(result1)  # 7
+
+result2 = apply_operation(3, 4, multiply)
+print(result2)  # 12
+
+result3 = apply_operation(3, 4, lambda a, b: a - b)
+print(result3)  # -1
+
+# Using TypeVar for generic functions
+T = TypeVar('T')  # Define a type variable. 
+
+# Used TypeVar to say "the output type is related to the input type" without fixing what that type is.
+def first_element(items: list[T]) -> T | None:
+    """Return the first element of a list, or None if empty."""
+    return items[0] if items else None
+
+# The function works with any type
+first_str = first_element(["Alice", "Bob"])  # Type: str | None
+first_int = first_element([1, 2, 3])  # Type: int | None
+
+print(first_str)  # Alice
+print(first_int)  # 1
+
+# Constrained TypeVar
+Number = TypeVar('Number', int, float)
+
+def double(x: Number) -> Number:
+    return x * 2
+
+# Bounded TypeVar — must be this type or a subclass
+class Animal:
+    def speak(self): ...
+
+A = TypeVar('A', bound=Animal)
+
+def make_speak(animal: A) -> A:  # returns the exact subclass, not just Animal
+    animal.speak()
+    return animal
+
+# Generic classes
+class Box(Generic[T]):
+    """A generic box that can hold any type of value."""
+    
+    def __init__(self, value: T) -> None:
+        self.value = value
+    
+    def get_value(self) -> T:
+        return self.value
+    
+    def set_value(self, value: T) -> None:
+        self.value = value
+
+# Create boxes with different types
+int_box = Box[int](42)
+str_box = Box[str]("Hello")
+
+print(int_box.get_value())  # 42
+print(str_box.get_value())  # Hello
+
+# Type casting (for cases where you know more than the type checker)
+def legacy_function(data):
+    """Legacy function without type annotations."""
+    return data
+
+# Use cast to tell the type checker about the return type
+data = legacy_function({1, 2, 3})
+set_data = cast(Set[int], data)  # No runtime effect, just for the type checker
+```
+
+The `typing` module provides powerful tools for annotating complex types, which can help document your code, catch type errors early, and enable better IDE support.
+
+### Protocols and Structural Typing
+
+Python 3.8+ supports Protocols from the `typing` module, enabling structural typing (duck typing) with type checking. A Protocol defines an interface that other types can implicitly implement.
+
+```python
+from typing import Protocol, runtime_checkable
+
+# Define a Protocol
+class Sized(Protocol):
+    def __len__(self) -> int: ...
+
+# Classes implementing __len__ automatically satisfy the Protocol
+class Bucket:
+    def __init__(self, items):
+        self.items = items
+    
+    def __len__(self):
+        return len(self.items)
+
+def measure(item: Sized) -> str:
+    return f"Size: {len(item)}"
+
+bucket = Bucket([1, 2, 3])
+print(measure(bucket))  # Size: 3 - Bucket implements Sized implicitly
+
+# Runtime-checkable Protocols
+@runtime_checkable
+class SupportsAdd(Protocol):
+    def __add__(self, other) -> object: ...
+
+class Number:
+    def __init__(self, value):
+        self.value = value
+    
+    def __add__(self, other):
+        if isinstance(other, Number):
+            return Number(self.value + other.value)
+        return Number(self.value + other)
+
+def combine(a: SupportsAdd, b: SupportsAdd):
+    return a + b
+
+n1 = Number(5)
+n2 = Number(10)
+print(combine(n1, n2).value)  # 15 - Number satisfies SupportsAdd
+```
+
+### Covariance and Contravariance
+
+Generic type parameters can be covariant, contravariant, or invariant, affecting type safety in inheritance hierarchies.
+
+```python
+from typing import TypeVar, Generic
+
+T_co = TypeVar('T_co', covariant=True)
+T_contra = TypeVar('T_contra', contravariant=True)
+
+# Covariant: Subtype relationship is preserved
+class Box(Generic[T_co]):
+    def __init__(self, content: T_co):
+        self.content = content
+    
+    def get(self) -> T_co:
+        return self.content
+
+# If B is a subtype of A, then Box[B] is a subtype of Box[A]
+class Animal:
+    pass
+
+class Dog(Animal):
+    pass
+
+def process_box(box: Box[Animal]):
+    animal = box.get()
+    print(animal)
+
+# Contravariant: Subtype relationship is reversed
+class Processor(Generic[T_contra]):
+    def process(self, item: T_contra) -> None:
+        print(f"Processing: {item}")
+
+def handle_processor(processor: Processor[Dog]):
+    processor.process(Dog())  # Can only process Dogs
+
+# Invariant: No subtype relationship (default for mutable containers)
+# list[Dog] is NOT a subtype of list[Animal] (and vice versa)
+def feed_animals(animals: list[Animal]):
+    for animal in animals:
+        print(f"Feeding {animal}")
+
+# dogs: list[Dog] = [Dog(), Dog()]
+# feed_animals(dogs)  # Would be unsafe - list is invariant
+```
+
+## Part III: Advanced Python
+
 
 ## 9. CPython Internals
 
@@ -8773,6 +7998,39 @@ Understanding the GIL influences system architecture decisions:
 1. For CPU-bound workloads, use multiprocessing or implement critical sections in C extensions that release the GIL
 2. For I/O-bound workloads, threading or asyncio works well despite the GIL
 3. For mixed workloads, consider a hybrid approach
+
+### Object Interning and Memory Optimization
+
+Python automatically interns (reuses) certain objects to save memory and improve performance. Small integers, short strings, and some other objects are cached and reused.
+
+```python
+# Small integer interning (typically -5 to 256)
+a = 100
+b = 100
+print(a is b)  # True - same object
+
+a = 1000
+b = 1000
+print(a is b)  # May be False - outside the interned range
+
+# String interning
+s1 = "hello"
+s2 = "hello"
+print(s1 is s2)  # True - short strings are interned
+
+# Explicit interning
+s1 = intern("large_string")
+s2 = intern("large_string")
+print(s1 is s2)  # True - explicitly interned
+
+from sys import intern
+```
+
+Object interning:
+- Reduces memory usage by sharing identical immutable objects
+- Speeds up equality comparisons (identity check suffices for interned objects)
+- Is applied automatically to small integers and short strings
+- Can be explicitly controlled with `sys.intern()`
 
 ### Extension Modules and the C API
 
@@ -11213,6 +10471,68 @@ print(f"New area: {rect.area}")  # Computing area..., 30
 print(f"New perimeter: {rect.perimeter}")  # Computing perimeter..., 22
 ```
 
+#### The Descriptor Protocol Deep Dive
+
+The descriptor protocol consists of three methods that control attribute access. Understanding these methods is crucial for implementing reusable attribute behavior.
+
+```python
+class Descriptor:
+    """Base descriptor class demonstrating the protocol."""
+    
+    def __init__(self, default=None):
+        self.default = default
+        self.name = None
+    
+    def __set_name__(self, owner, name):
+        """Called when the descriptor is assigned to a class attribute."""
+        self.name = name
+    
+    def __get__(self, instance, owner):
+        """Called when the attribute is read.
+        
+        instance: The instance (or None for class access)
+        owner: The owner class
+        """
+        if instance is None:
+            return self
+        return instance.__dict__.get(self.name, self.default)
+    
+    def __set__(self, instance, value):
+        """Called when the attribute is assigned."""
+        instance.__dict__[self.name] = value
+    
+    def __delete__(self, instance):
+        """Called when the attribute is deleted."""
+        if self.name in instance.__dict__:
+            del instance.__dict__[self.name]
+
+class ValidatedDescriptor(Descriptor):
+    """A descriptor with type validation."""
+    
+    def __init__(self, type_, default=None):
+        super().__init__(default)
+        self.type = type_
+    
+    def __set__(self, instance, value):
+        if not isinstance(value, self.type):
+            raise TypeError(f"{self.name} must be {self.type.__name__}")
+        super().__set__(instance, value)
+
+class Person:
+    name = ValidatedDescriptor(str)
+    age = ValidatedDescriptor(int, 0)
+
+p = Person()
+p.name = "Alice"  # Calls ValidatedDescriptor.__set__
+p.age = 30
+```
+
+**Data vs Non-Data Descriptors**:
+- Data descriptors define both `__get__` and `__set__`/`__delete__`
+- Non-data descriptors define only `__get__`
+- Data descriptors always take precedence over instance `__dict__`
+- Non-data descriptors can be shadowed by instance attributes
+
 ## 11. Memory Optimization and Extensions
 
 ### `__slots__` for Memory Optimization
@@ -13082,289 +12402,176 @@ mypackage = ["data/*.json"]
 
 ## 13. New Python Features
 
-### Python 3.10 to 3.13 Features
+### Python 3.10 to 3.14 Features
 
-Python continues to evolve with new releases introducing powerful features. Here's an overview of key features introduced in recent Python versions.
+Python's rapid release cycle has delivered significant features in recent versions. This section covers the key additions from Python 3.10 through 3.14.
+
+#### Structural Pattern Matching
+
+Python 3.10 introduced the `match` statement, enabling sophisticated pattern matching similar to functional languages.
 
 ```python
-# Python 3.10 Features (October 2021)
-def python_310_features():
-    """Demonstrate Python 3.10 features."""
-    print("Python 3.10 Features:")
-    
-    print("\n1. Structural Pattern Matching (PEP 634):")
-    print("   The match statement provides a powerful pattern matching mechanism")
-    
-    def match_example(value):
-        match value:
-            case []:
-                return "Empty list"
-            case [a]:
-                return f"List with one element: {a}"
-            case [a, b]:
-                return f"List with two elements: {a} and {b}"
-            case [a, b, *rest]:
-                return f"List with {len(rest) + 2} elements, starting with {a} and {b}"
-            case {"name": name, "age": age}:
-                return f"Person named {name}, age {age}"
-            case {"error": msg}:
-                return f"Error: {msg}"
-            case str() as s if len(s) > 5:
-                return f"Long string: {s}"
-            case str() as s:
-                return f"Short string: {s}"
-            case _:
-                return "Something else"
-    
-    examples = [
-        [],
-        [1],
-        [1, 2],
-        [1, 2, 3, 4],
-        {"name": "Alice", "age": 30},
-        {"error": "Not found"},
-        "Hello, world!",
-        "Hi",
-        42
-    ]
-    
-    for example in examples:
-        print(f"  match {example!r}: {match_example(example)}")
-    
-    print("\n2. Better Error Messages:")
-    print("   - More precise syntax error messages")
-    print("   - Suggestions for fixing errors")
-    
-    print("\n3. Parameter Specification Variables (PEP 612):")
-    print("   TypeVar for specifying generic parameters in type annotations")
-    print("""
-from typing import Callable, ParamSpec, TypeVar
+def process(data):
+    match data:
+        case []:
+            return "empty"
+        case [x]:
+            return f"single: {x}"
+        case [x, y]:
+            return f"pair: {x}, {y}"
+        case [x, *rest]:
+            return f"first: {x}, remaining: {rest}"
+        case {"type": "error", "message": msg}:
+            return f"error: {msg}"
+        case {"type": "user", "name": name, "age": age}:
+            return f"user {name}, age {age}"
+        case str() as s if len(s) > 10:
+            return f"long string: {s[:10]}..."
+        case _:
+            return "something else"
 
-P = ParamSpec('P')
-R = TypeVar('R')
+print(process([]))                      # empty
+print(process([1, 2, 3]))              # first: 1, remaining: [2, 3]
+print(process({"type": "error", "message": "oops"}))  # error: oops
+```
 
-def decorator(func: Callable[P, R]) -> Callable[P, R]:
-    def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
-        return func(*args, **kwargs)
-    return wrapper
-""")
-    
-    print("\n4. Union Types as X | Y (PEP 604):")
-    print("   New syntax for Union types in type annotations")
-    print("""
-# Old way
+Patterns support literals, sequences, mappings, class patterns, and guards. This is particularly useful for parsing data structures, implementing state machines, and handling API responses.
+
+#### Union Types and Type Annotations
+
+Python 3.10 added the `|` operator for union types, replacing the verbose `Union[int, str]` syntax:
+
+```python
+# Before
 from typing import Union
 def func(x: Union[int, str]) -> Union[float, bool]:
     ...
 
-# New way
+# After (3.10+)
 def func(x: int | str) -> float | bool:
     ...
-""")
-    
-    print("\n5. Context Managers in parentheses:")
-    print("   Multi-line with statements can use parentheses:")
-    print("""
-with (
-    open('file1.txt') as f1,
-    open('file2.txt') as f2
-):
-    ...
-""")
-    
-    print("\n6. Better Type Annotations:")
-    print("   - Improved TypeAlias")
-    print("   - Better error messages from type checkers")
-    print("   - Type unions with |")
+```
 
-# Python 3.11 Features (October 2022)
-def python_311_features():
-    """Demonstrate Python 3.11 features."""
-    print("\nPython 3.11 Features:")
-    
-    print("\n1. Performance Improvements:")
-    print("   - Up to 10-60% faster CPython interpreter")
-    print("   - Faster startup and runtime")
-    print("   - Optimized frame evaluation")
-    
-    print("\n2. Better Error Messages:")
-    print("   - Shows the exact expression that caused the error")
-    print("   - More detailed tracebacks")
-    
-    print("\n3. Exception Groups and except* (PEP 654):")
-    print("   Allow raising and catching multiple exceptions at once")
-    print("""
-try:
-    # Some code that might raise multiple exceptions
-    ...
-except* ValueError as e:
-    # Handle ValueError instances from the exception group
-    ...
-except* TypeError as e:
-    # Handle TypeError instances from the exception group
-    ...
-""")
-    
-    print("\n4. Task and Exception Groups in asyncio:")
-    print("   New API for managing groups of tasks")
-    print("""
-async def main():
-    async with asyncio.TaskGroup() as tg:
-        task1 = tg.create_task(some_coro())
-        task2 = tg.create_task(another_coro())
-        # All tasks are awaited when exiting the context manager
-""")
-    
-    print("\n5. Type Annotations Improvements:")
-    print("   - Self type for returning the same type as the class")
-    print("   - Variadic generics (TypeVarTuple)")
-    print("   - Required and NotRequired for TypedDict items")
-    
-    print("\n6. TOML Support in Standard Library:")
-    print("   - tomllib module for parsing TOML files")
-    print("""
-import tomllib
-with open("config.toml", "rb") as f:
-    data = tomllib.load(f)
-""")
-    
-    print("\n7. New In-memory ZIP archives:")
-    print("   Create ZIP archives without using temp files")
-    print("""
-import zipfile
-archive = zipfile.ZipFile(None, mode='w')
-archive.writestr('file.txt', 'content')
-data = archive.get_in_memory_file_contents()
-""")
+Python 3.12 introduced type parameter syntax (PEP 695), making generic functions and classes more concise:
 
-# Python 3.12 Features (October 2023)
-def python_312_features():
-    """Demonstrate Python 3.12 features."""
-    print("\nPython 3.12 Features:")
-    
-    print("\n1. Type Parameter Syntax (PEP 695):")
-    print("   - New syntax for generic type parameters")
-    print("   - More concise type variable declaration")
-    print("""
-# New syntax
+```python
 def max[T](args: list[T]) -> T:
-    ...
+    result = args[0]
+    for arg in args:
+        if arg > result:
+            result = arg
+    return result
 
-# New class type parameter syntax
-class TreeNode[T]:
-    value: T
-    left: "TreeNode[T] | None" = None
-    right: "TreeNode[T] | None" = None
-""")
+class Container[T]:
+    def __init__(self, value: T):
+        self.value = value
     
-    print("\n2. Improved f-strings (PEP 701):")
-    print("   - Allow quotes inside f-strings that match the outer quotes")
-    print("   - Allow expressions with unbalanced braces")
-    print("""
+    def get(self) -> T:
+        return self.value
+```
+
+#### Context Managers
+
+Parenthesized context managers arrived in Python 3.10, enabling cleaner multi-line resource management:
+
+```python
+with (
+    open("input.txt") as infile,
+    open("output.txt", "w") as outfile
+):
+    outfile.write(infile.read())
+```
+
+#### Exception Groups
+
+Python 3.11 added exception groups and the `except*` syntax for handling multiple exceptions concurrently:
+
+```python
+def task(i):
+    if i % 3 == 0:
+        raise ValueError(f"error in {i}")
+    return i
+
+async def main():
+    try:
+        async with asyncio.TaskGroup() as tg:
+            for i in range(5):
+                tg.create_task(coro(i))
+    except* ValueError as eg:
+        for e in eg.exceptions:
+            print(f"Caught: {e}")
+```
+
+#### Performance Improvements
+
+Python 3.11 brought substantial interpreter optimizations, achieving 10-60% faster execution through faster startup, optimized frame evaluation, and specialized adaptive bytecode.
+
+Python 3.13 introduced an optional JIT compiler that can be enabled at build time. When enabled, hot code paths are compiled to machine instructions at runtime, providing additional speedups for long-running programs:
+
+```python
+# The JIT is enabled when Python is built with --enable-experimental-jit
+import sys
+print(sys.flags.jit)  # 1 if JIT is available and enabled
+```
+
+Python 3.14 further improved performance with optimizations to dict operations, better inlining, and reduced memory overhead.
+
+#### The Global Interpreter Lock (GIL)
+
+The GIL remains in Python 3.13 and 3.14, but significant work has gone into improving multi-threaded performance. Python 3.13 introduced the free-threaded build mode (experimental), which removes the GIL at the cost of some compatibility:
+
+```python
+# To use: build with --disable-gil
+# Or in 3.14+:
+import sys
+sys._enable_gil()  # Can toggle GIL at runtime in free-threaded build
+```
+
+For CPU-bound work requiring true parallelism, `multiprocessing` or `ProcessPoolExecutor` remain the recommended approaches regardless of GIL status.
+
+#### Improved Error Messages
+
+Each version has enhanced error messages. Python 3.10 improved syntax error reporting. Python 3.11 shows the exact sub-expression that caused an error:
+
+```python
+# Python 3.11+ shows the problematic expression in the traceback
+def example():
+    data = {"key": {"nested": "value"}}
+    return data["missing"]["nested"]  # Points to the exact failure
+```
+
+Python 3.12+ provides better suggestions for typos and more detailed context in tracebacks.
+
+#### Other Notable Features
+
+Python 3.11 added `tomllib` for parsing TOML configuration files, `asyncio.TaskGroup` for managing concurrent tasks, and `zipfile.ZipFile(None)` for in-memory archives.
+
+Python 3.12 improved f-strings to allow quotes inside f-strings and expressions with unbalanced braces:
+
+```python
 name = "Alice"
-f"Name: {name = }"   # Name: name = 'Alice'
-f"Dict: {{"key": "value"}}"  # Dict: {"key": "value"}
-""")
-    
-    print("\n3. Enhanced Modules:")
-    print("   - New pathlib.Path.walk() method")
-    print("   - New `is_closed` for file-like objects")
-    print("   - Enhanced shutil.copy* methods accepting path-like objects and open file descriptors")
-    
-    print("\n4. Performance Improvements:")
-    print("   - Continued interpreter optimizations")
-    print("   - More C-implemented modules")
-    print("   - Optimized startup time")
-    
-    print("\n5. Enhanced Error Messages:")
-    print("   - Even more detailed error messages")
-    print("   - Better suggestions for typos in names")
-    
-    print("\n6. Removal of deprecated features:")
-    print("   - Removed old raise syntax: 'raise Exception, args'")
-    print("   - Removed deprecated modules (aifc, audioop, chunk, etc.)")
-    print("   - Removed deprecated unittest methods")
-    
-    print("\n7. New Itertools Utilities:")
-    print("   - itertools.batched() to chunk an iterable into fixed-length batches")
-    print("""
-from itertools import batched
-for batch in batched(range(10), 3):
-    print(batch)  # (0, 1, 2), (3, 4, 5), (6, 7, 8), (9,)
-""")
+age = 30
 
-# Python 3.13 Features (Expected October 2024)
-def python_313_features():
-    """Discuss expected Python 3.13 features."""
-    print("\nPython 3.13 Features (Expected October 2024):")
-    print("Note: These are proposed/expected features and may change")
-    
-    print("\n1. Static Typing Improvements:")
-    print("   - Further enhancements to type annotations")
-    print("   - Better support for generics")
-    print("   - More expressive type system")
-    
-    print("\n2. Continued Performance Improvements:")
-    print("   - More optimizations in the CPython interpreter")
-    print("   - Further development of the JIT compiler (Faster CPython)")
-    print("   - Memory usage optimizations")
-    
-    print("\n3. Pattern Matching Improvements:")
-    print("   - Optimized pattern matching")
-    print("   - Enhanced features for structural pattern matching")
-    
-    print("\n4. Standard Library Enhancements:")
-    print("   - More modules moved to C implementations")
-    print("   - New utility functions in common modules")
-    print("   - Enhanced concurrency primitives")
-    
-    print("\n5. GIL Improvements:")
-    print("   - Continued work on the 'nogil' fork of CPython")
-    print("   - Potential GIL-free capabilities")
-    print("   - Better multi-core CPU utilization")
-    
-    print("\n6. Enhanced Error Messages:")
-    print("   - Continuing the trend of more helpful error messages")
-    print("   - Better debugging information")
-    
-    print("\n7. More TOML Support:")
-    print("   - Potential addition of a tomllib writer")
-    print("   - Expanded TOML capabilities")
+# Self-documenting expressions
+print(f"{name=} {age=}")  # name='Alice' age=30
 
-# Comparison with older Python versions
-def python_version_comparison():
-    """Compare feature sets across Python versions."""
-    print("\nFeature comparison across Python versions:")
-    
-    features_table = [
-        ("Feature", "3.9", "3.10", "3.11", "3.12", "3.13"),
-        ("Dictionary Merging (|)", "✓", "✓", "✓", "✓", "✓"),
-        ("Type Annotations Without Imports", "✓", "✓", "✓", "✓", "✓"),
-        ("Pattern Matching", "✗", "✓", "✓", "✓", "✓"),
-        ("Union Types with |", "✗", "✓", "✓", "✓", "✓"),
-        ("Exception Groups", "✗", "✗", "✓", "✓", "✓"),
-        ("Self Type", "✗", "✗", "✓", "✓", "✓"),
-        ("TOML Parser", "✗", "✗", "✓", "✓", "✓"),
-        ("Type Parameter Syntax", "✗", "✗", "✗", "✓", "✓"),
-        ("Enhanced f-strings", "✗", "✗", "✗", "✓", "✓"),
-        ("batched() in itertools", "✗", "✗", "✗", "✓", "✓"),
-        ("JIT Compilation", "✗", "✗", "✗", "✗", "Partial")
-    ]
-    
-    # Print the table
-    for i, row in enumerate(features_table):
-        # Header row
-        if i == 0:
-            print("  " + " | ".join(cell.ljust(20) for cell in row))
-            print("  " + "-" * 120)
-        # Data rows
-        else:
-            print("  " + " | ".join(cell.ljust(20) for cell in row))
+# Quotes
+message = f"He said: '{name} is {age}'"
+```
 
-# Running the examples
-# python_310_features()
-# python_311_features()
-# python_312_features()
-# python_313_features()
-# python_version_comparison()
+Python 3.13 and 3.14 continued expanding the standard library with `itertools.batched()`, enhanced `pathlib` functionality, and improved Unicode support.
+
+#### Version Comparison
+
+| Feature | 3.10 | 3.11 | 3.12 | 3.13 | 3.14 |
+|---------|------|------|------|------|------|
+| Structural Pattern Matching | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Union types (`X \| Y`) | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Exception Groups (`except*`) | - | ✓ | ✓ | ✓ | ✓ |
+| TOML parsing | - | ✓ | ✓ | ✓ | ✓ |
+| Type Parameter Syntax | - | - | ✓ | ✓ | ✓ |
+| Enhanced f-strings | - | - | ✓ | ✓ | ✓ |
+| Optional JIT | - | - | - | ✓ | ✓ |
+| Free-threaded build | - | - | - | ✓ | ✓ |
+| Improved error messages | ✓ | ✓ | ✓ | ✓ | ✓ |
 ```

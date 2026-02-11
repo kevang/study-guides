@@ -1,4 +1,4 @@
-``# SQL for Analytics: A Comprehensive Guide
+# SQL for Analytics: A Comprehensive Guide
 
 ## Table of Contents
 
