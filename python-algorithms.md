@@ -959,60 +959,52 @@ def daily_temperatures(temperatures: list[int]) -> list[int]:
 Time Complexity: O(n) - Each index is pushed and popped at most once
 Space Complexity: O(n) - In the worst case, the stack could contain all indices
 
-#### Medium: Implement Queue using Stacks
+#### Medium: Sliding Window Maximum
 
-**Problem**: Implement a first-in-first-out (FIFO) queue using only two stacks. The implemented queue should support the standard queue operations: `push`, `peek`, `pop`, and `empty`.
+**Problem**: You are given an integer array `nums`, and there is a sliding window of size `k` which moves from the very left to the very right. You can only see the `k` numbers in the window. Each time the sliding window moves right by one position. Write a function that returns the maximum element in each window position.
 
 **Examples**:
-```
-MyQueue queue = new MyQueue();
-queue.push(1);             // queue is: [1]
-queue.push(2);             // queue is: [1, 2]
-queue.peek();              // return 1
-queue.pop();               // return 1, queue is [2]
-queue.empty();             // return false
-```
+- `max_sliding_window([1, 3, -1, -3, 5, 3, 6, 7], 3)` should return `[3, 3, 5, 5, 6, 7]`
+- `max_sliding_window([1], 1)` should return `[1]`
+- `max_sliding_window([1, -1], 1)` should return `[1, -1]`
+- `max_sliding_window([9, 11], 2)` should return `[11]`
 
-**Approach**: Use one stack for pushing elements and another stack for popping elements. Transfer elements between stacks when necessary.
+**Approach**: Use a monotonic decreasing deque to efficiently track the maximum element in each window. The deque stores indices of elements in decreasing order of their values.
+
+from collections import deque
 
 ```python
-class MyQueue:
-    def __init__(self):
-        self.stack_push = []  # For push operations
-        self.stack_pop = []   # For pop/peek operations
+from collections import deque
+
+def max_sliding_window(nums: list[int], k: int) -> list[int]:
+    if not nums or k == 0:
+        return []
     
-    def push(self, x: int) -> None:
-        # Always push to the push stack
-        self.stack_push.append(x)
+    result = []
+    # Deque stores indices of elements in decreasing order of their values
+    max_indices = deque()
     
-    def _transfer(self) -> None:
-        # If pop stack is empty, transfer all elements from push stack
-        if not self.stack_pop:
-            while self.stack_push:
-                self.stack_pop.append(self.stack_push.pop())
+    for current_index in range(len(nums)):
+        # Remove indices of smaller elements from back - they can't be max
+        while max_indices and nums[max_indices[-1]] <= nums[current_index]:
+            max_indices.pop()
+        
+        # Add current index to deque
+        max_indices.append(current_index)
+        
+        # Remove indices outside current window from front
+        while max_indices[0] <= current_index - k:
+            max_indices.popleft()
+        
+        # Start recording results once first window is complete
+        if current_index >= k - 1:
+            result.append(nums[max_indices[0]])
     
-    def pop(self) -> int:
-        self._transfer()
-        if self.stack_pop:
-            return self.stack_pop.pop()
-        return None
-    
-    def peek(self) -> int:
-        self._transfer()
-        if self.stack_pop:
-            return self.stack_pop[-1]
-        return None
-    
-    def empty(self) -> bool:
-        return len(self.stack_push) == 0 and len(self.stack_pop) == 0
+    return result
 ```
 
-Time Complexity:
-- push: O(1) - Direct push to a stack
-- pop: Amortized O(1) - Each element is transferred at most once
-- peek: Amortized O(1) - Same as pop
-- empty: O(1) - Simple length check
-Space Complexity: O(n) - For storing all elements across both stacks
+Time Complexity: O(n) - Each element is added and removed from the deque at most once
+Space Complexity: O(k) - The deque holds at most k elements
 
 ## Binary Search
 
@@ -1213,6 +1205,7 @@ Space Complexity: O(1) - We only use a constant amount of extra space
 
 **Examples**:
 - `search_rotated([4, 5, 6, 7, 0, 1, 2], 0)` should return `4`
+- `search_rotated([1, 2, 4, 5, 6, 7, 0], 0)` should return `6`
 - `search_rotated([4, 5, 6, 7, 0, 1, 2], 3)` should return `-1`
 - `search_rotated([1], 0)` should return `-1`
 - `search_rotated([1, 3], 3)` should return `1`
@@ -1520,56 +1513,6 @@ def has_cycle(head: ListNode) -> bool:
 ```
 
 Time Complexity: O(n) - In the worst case, we traverse the list once
-Space Complexity: O(1) - We only use a constant amount of extra space
-
-#### Medium: Intersection of Two Linked Lists
-
-**Problem**: Given the heads of two singly linked lists `headA` and `headB`, write a function that returns the node at which the two lists intersect. If the two linked lists have no intersection at all, return `null`.
-
-**Examples**:
-- `getIntersectionNode(A: 1->2->3->4->5, B: 6->3->4->5)` should return node with value 3
-- `getIntersectionNode(A: 1->9->1->2->4, B: 3->2->4)` should return node with value 2
-- `getIntersectionNode(A: 2->6->4, B: 1->5)` should return null
-
-**Approach**: Calculate the length difference of the two lists, then advance the pointer of the longer list by that difference. Then move both pointers simultaneously until they meet.
-
-```python
-def get_intersection_node(headA: ListNode, headB: ListNode) -> ListNode:
-    if not headA or not headB:
-        return None
-    
-    # Helper function to get list length
-    def get_length(node):
-        length = 0
-        while node:
-            length += 1
-            node = node.next
-        return length
-    
-    # Get the lengths
-    lenA = get_length(headA)
-    lenB = get_length(headB)
-    
-    # Align the starting positions
-    currA, currB = headA, headB
-    if lenA > lenB:
-        for _ in range(lenA - lenB):
-            currA = currA.next
-    else:
-        for _ in range(lenB - lenA):
-            currB = currB.next
-    
-    # Move both pointers until they meet or reach the end
-    while currA and currB:
-        if currA == currB:
-            return currA
-        currA = currA.next
-        currB = currB.next
-    
-    return None  # No intersection
-```
-
-Time Complexity: O(m + n) - Where m and n are the lengths of the two lists
 Space Complexity: O(1) - We only use a constant amount of extra space
 
 ## Trees
